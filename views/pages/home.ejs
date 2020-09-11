@@ -1,0 +1,20 @@
+<%- include("../partials/header") %>
+
+<h1 class="logo">YouTube Playlist Tracker</h1>
+<p>Every day we make a snapshot of your playlist.<br>
+If a video gets deleted, you'll be able to check its title here.</p>
+<pre>PLKBVIiQPPtyi_6r4buI4ZsiW39eBsjjXl</pre>
+<form action="/" method="post">
+	<input type="text" placeholder="YouTube Playlist ID" name="playlist_id" required pattern="\w+" maxlength="50">
+	<button type="submit">Track</button>
+</form>
+
+<% if (locals.playlist_id_valid === false) { %>
+<p class="error">Please enter a <em>valid</em> and <em>public</em> playlist ID</p>
+<% } if (locals.playlist_id_valid === true) { %>
+<p class="success">Alright, we will periodically check your playlist for deleted videos now!<br>
+You can check the current status <a href="/<%= playlist_id %>">here</a>.</p>
+<% } %>
+
+<%- include ("../partials/footer") %>
+

@@ -1,0 +1,17 @@
+{
+  "name": "youtube-playlist-snapshot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "playlist.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "sqlite3": "^5.0.0"
+  }
+}
