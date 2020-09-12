@@ -33,7 +33,13 @@ form button {
 	color: forestgreen;
 }
 
-.success a {
+.info {
+	color: dodgerblue;
+}
+
+.success a,
+.error a,
+.info a {
 	color: black;
 }
 

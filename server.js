@@ -3,173 +3,138 @@ const bodyParser = require("body-parser")
 const https = require("https")
 const app = express()
 const youtubedl = require("./youtubedl")
-const database = require("./database")
+const DB = require("./database2")
+const E = require("./helpers").E
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static(__dirname + '/public'))
 app.set("view engine", "ejs")
 
 app.get("/", function(req, res) {
-	res.render("pages/home")
+	res.render("pages/home", { message: null, type: null })
 })
 
 app.post("/", async function(req, res) {
 
-	const playlistId = req.body.playlist_id
+	const id = req.body.playlist_id
+	const messages = {
+		invalid: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
+		info: `We already indexed this playlist. You can find it <a href='/${id}'>here</a>.`,
+		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="/${id}">here</a>.`
+	}
 
-	validatePlaylistId(playlistId, function(valid) {
-		if (valid) {
-			res.render("pages/home", {playlist_id_valid: true, playlist_id: playlistId})
-			youtubedl(playlistId)
-		} else {
-			res.render("pages/home", {playlist_id_valid: false})
-		}
-	})
+	// check if id passed is a valid youtube playlist
+	try {
+		await validPlaylist(id)
+	} catch (e) {
+		res.render("pages/home", { message: messages.invalid, type: "error" })
+	}
 
-})
+	// check if playlist is already indexed
+	try {
+		await DB.open()
+		await DB.getPlaylist(id)
+		await DB.close()
+		res.render("pages/home", { message: messages.info, type: "info" })
+	} catch (e) {
 
-app.get("/*", function(req, res) {
+		// playlist does not exist and will therefore be added
+		res.render("pages/home", { message: messages.success, type: "success" })
 
-	let playlistId = req.originalUrl.substring(1)
+		// create new playlist
+		// ...
 
-	validatePlaylistId(playlistId, function(valid) {
+		// start youtube-dl and fill database
+		// ...
 
-		if (valid) {
-			existsPlaylist(playlistId, function(exists, playlist) {
-
-				if (exists) {
-					allVideosOfPlaylist(playlist.id, function(videos) {
-
-						if (videos.length > 0) {
-							allDeletedVideos(videos, function(deletedVideos) {
-
-								if (deletedVideos.length > 0) {
-									decorateViewData(playlist, deletedVideos, videos)
-									res.render("pages/playlist", playlist)
-								} else {
-									// in dieser playlist existieren keine gelöschten videos
-									playlist.success = true
-									playlist.message = "This playlist contains no deleted videos!"
-									res.render("pages/playlist", playlist)
-								}
-							})
-						} else {
-							// keine videos für diese playlist gefunden
-							playlist.error = true
-							playlist.message = "This playlist is empty."
-							res.render("pages/playlist", playlist)
-						}
-					})
-				} else {
-					// diese playlist ist noch nicht in der datenbank
-					res.render("pages/playlist", {error: true, message: "This playlist ist not yet indexed."})
-				}
-			})
-		} else {
-			// ist keine youtube playlist
-			res.redirect("/")
-		}
-	})
+	}
 
 })
 
-function existsPlaylist(id, callback) {
+app.get("/*", async function(req, res) {
 
-	database.get("SELECT * FROM playlists WHERE url = ?", [id], function(error, playlist) {
+	let id = req.originalUrl.substring(1)
+	let playlist = {}
+	let videos = []
+	let deletedVideos = []
+	let error = null
 
-		if (error | playlist === undefined) {
-			callback(false)
+	try {
+							await validPlaylist(id)
+							await DB.open()
+		playlist 		= 	await DB.getPlaylist(id)
+							//await playlistInProcess(playlist.id)
+		videos 			=	await DB.getVideosOfPlaylist(playlist.id)
+		deletedVideos 	= 	await DB.getDeletedVideos(videos)
+							await DB.close()
+	} catch (e) {
+
+		console.log(e)
+
+		if (e.type == "database") {
+			res.status(500).send("Something went wrong. Try again later.")
+			return
+		} else if (e.type == "redirect") {
+			res.status(400).send("Invalid Playlist ID")
+			return
 		} else {
-			callback(true, playlist)
+			error = e.message
 		}
 
-	})
+	}
 
-}
+	const restoredVideosFirst = (a, b) => {
+		return (a.title == "[Deleted]") ? 1 : -1
+	}
 
-function allVideosOfPlaylist(id, callback) {
+	if (deletedVideos)
+		deletedVideos.sort(restoredVideosFirst)
 
-	database.all("SELECT video_id FROM playlists_videos WHERE playlist_id = ?", [id], function(error, videos) {
+	let viewData = {
+		playlist,
+		videos,
+		deletedVideos,
+		error,
+		deletedPercentage: ((deletedVideos.length / videos.length) * 100).toFixed(1)
+	}
 
-		if (error | videos === undefined) {
-			callback([])
-		} else {
-			callback(videos)
-		}
+	res.render("pages/playlist", viewData)
 
-	})
+})
 
-}
-
-function allDeletedVideos(videos, callback) {
-
-	let videoIdsArray = videos.map(video => video.video_id)
-	let placeholder = ", ?".repeat(videoIdsArray.length - 1)
-
-	database.all("SELECT title, url FROM videos WHERE id IN (?" + placeholder + ") AND deleted = 1", videoIdsArray, function(error, deletedVideos) {
-
-		if (error | deletedVideos === undefined) {
-			callback([])
-		} else {
-			callback(deletedVideos)
-		}
-
-	})
-
-}
-
-
-/*
- * viewData format
- *
-	uploader_id,
-	title,
-	url,
-	deleted_videos,
-	deleted_percentage,
-	all_videos_length
-*/
-
-function decorateViewData(viewData, deletedVideos, allVideos) {
-
-	viewData.deleted_percentage = ((deletedVideos.length / allVideos.length) * 100).toFixed(1)
-
-	viewData.deleted_videos = deletedVideos.sort(function(a, b) {
-		if (a.title == "[Deleted]") {
-			return 1
-		} else {
-			return -1
-		}
-	})
-
-	viewData.all_videos_length = allVideos.length
-
-}
 
 app.listen(8080)
 console.log("server listening at 8080")
 
-function validatePlaylistId(playlistId, callbackFn) {
+// -----------
+// FUNCTIONS
+// ---
 
-	let valid = false
+function validPlaylist(id) {
+	return new Promise((resolve, reject) => {
 
-	if (playlistId.length < 50)
-		valid = true
+		if (id.length > 50 || /\W/.test(id))
+			reject(E("Invalid Playlist ID", "redirect"))
 
-	if (/\W/.test(playlistId) == false)
-		valid = true
-
-	if (!valid)
-		callbackFn(false)
-
-	// pre-check successful, now for the real life test with a GET youtube request!
-
-	https.get(`https://www.youtube.com/playlist?list=${playlistId}`, function({statusCode}) {
-		if (statusCode == 200) {
-			callbackFn(true)
-		} else {
-			callbackFn(false)
-		}
+		// pre-check successful, now for the real life test with a GET youtube request!
+		https.get(`https://www.youtube.com/playlist?list=${id}`, function({statusCode}) {
+			if (statusCode == 200) {
+				resolve(true)
+			} else {
+				reject(E("Invalid Playlist ID", "redirect"))
+			}
+		})
 	})
-
 }
+
+/*
+function playlistInProcess(id) {
+
+	//let inProcess =
+
+	if (inProcess)
+		throw E("Playlist getting processed. Please check back in a few minutes.")
+	else
+		return inProcess
+
+}*/

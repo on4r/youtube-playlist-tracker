@@ -2,14 +2,10 @@
 
 <a href="/" class="logo">YouTube Playlist Tracker</a>
 
-<% if (locals.url && locals.uploader_id && locals.title) { %>
-<h1><a class="no-highlight" href="https://www.youtube.com/playlist?list=<%= url %>" target="_blank"><%= title %></a></h1>
-<p class="subtitle">by <a class="no-highlight" href="https://www.youtube.com/user/<%= uploader_id %>" target="_blank"><%= uploader_id %></a></p>
-<% } %>
+<h1><a class="no-highlight" href="https://www.youtube.com/playlist?list=<%= playlist.url %>" target="_blank"><%= playlist.title %></a></h1>
+<p class="subtitle">by <a class="no-highlight" href="https://www.youtube.com/user/<%= playlist.uploader_id %>" target="_blank"><%= playlist.uploader_id %></a></p>
 
-<% if (locals.deleted_videos && locals.all_videos_length && locals.deleted_percentage) { %>
-<p><span class="error"><%= deleted_videos.length %></span> / <%= all_videos_length %> (<%= deleted_percentage %>%)</p>
-<% } %>
+<p><span class="error"><%= deletedVideos.length %></span> / <%= videos.length %> (<%= deletedPercentage %>%)</p>
 
 <% if (locals.error) { %>
 	<p class="error"><%= message %></p>
@@ -17,7 +13,7 @@
 	<p class="success"><%= message %></p>
 <% } else { %>
 <ul>
-	<% deleted_videos.forEach(function(video) { %>
+	<% deletedVideos.forEach(function(video) { %>
 		<li>
 		<% if (video.title == "[Deleted]") { %>
 			<span contenteditable="true"><%= video.title %></span>

@@ -9,11 +9,8 @@ If a video gets deleted, you'll be able to check its title here.</p>
 	<button type="submit">Track</button>
 </form>
 
-<% if (locals.playlist_id_valid === false) { %>
-<p class="error">Please enter a <em>valid</em> and <em>public</em> playlist ID</p>
-<% } if (locals.playlist_id_valid === true) { %>
-<p class="success">Alright, we will periodically check your playlist for deleted videos now!<br>
-You can check the current status <a href="/<%= playlist_id %>">here</a>.</p>
+<% if(message && type) { %>
+<p class="<%= type %>"><%- message %></p>
 <% } %>
 
 <%- include ("../partials/footer") %>
