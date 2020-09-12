@@ -1,3 +1,9 @@
+# einige playlist ids:
+PL6cI1_8BvV-Yb9hCB_8AoFSAbF8gIyVVC
+PLowKtXNTBypH19whXTVoG3oKSuOcw_XeW
+PLjSy6F65_LKR-lJ8yxFDMivxdLZ3N59L4
+OLAK5uy_nAISRtNgeSDD0moO6yOou5WbDSf7E_QrI
+
 # meine musik playlist
 
 https://www.youtube.com/playlist?list=

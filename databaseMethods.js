@@ -5,11 +5,11 @@ const deletedTriggerString = "[Deleted video]"
 
 
 module.exports = {
-	openDatabase,
-	closeDatabase,
-	readPlaylist,
-	readVideosOfPlaylist,
-	readDeletedVideos,
+//	openDatabase,
+//	closeDatabase,
+//	readPlaylist,
+//	readVideosOfPlaylist,
+//	readDeletedVideos,
 	createPlaylist,
 	updatePlaylistTitle,
 	createVideo,

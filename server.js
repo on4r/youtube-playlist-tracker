@@ -20,7 +20,8 @@ app.post("/", async function(req, res) {
 	const messages = {
 		invalid: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
 		info: `We already indexed this playlist. You can find it <a href='/${id}'>here</a>.`,
-		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="/${id}">here</a>.`
+		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="/${id}">here</a>.`,
+		dberror: `Ups! Something went wrong. Please try again later.`
 	}
 
 	// check if id passed is a valid youtube playlist
@@ -39,12 +40,17 @@ app.post("/", async function(req, res) {
 	} catch (e) {
 
 		// playlist does not exist and will therefore be added
-		res.render("pages/home", { message: messages.success, type: "success" })
+		try {
+			await DB.open()
+			await DB.addPlaylist(id)
+			await DB.close()
+			res.render("pages/home", { message: messages.success, type: "success" })
+		} catch (e) {
+			res.render("pages/home", { message: messages.dberror, type: "error" })
+		}
 
-		// create new playlist
-		// ...
-
-		// start youtube-dl and fill database
+		// start the async "youtube-dl and fill database" script
+		// updateDatabase()
 		// ...
 
 	}
@@ -113,7 +119,7 @@ console.log("server listening at 8080")
 function validPlaylist(id) {
 	return new Promise((resolve, reject) => {
 
-		if (id.length > 50 || /\W/.test(id))
+		if (id.length > 50 || !/[\w-]+/.test(id))
 			reject(E("Invalid Playlist ID", "redirect"))
 
 		// pre-check successful, now for the real life test with a GET youtube request!

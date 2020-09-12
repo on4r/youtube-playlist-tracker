@@ -68,12 +68,26 @@ const DB = ((dbLocation) => {
 		})
 	}
 
+	function createPlaylist(url) {
+		return new Promise((resolve, reject) => {
+			db.run("INSERT INTO playlists(url) VALUES(?)", [url], function(error) {
+				if (error) {
+					reject(E(error, "database"))
+				} else {
+					resolve(this.changes)
+					console.log("Added a new playlist", {id: this.lastID, url})
+				}
+			})
+		})
+	}
+
 	return {
 		open: openDatabase,
 		close: closeDatabase,
 		getPlaylist: readPlaylist,
 		getVideosOfPlaylist: readVideosOfPlaylist,
-		getDeletedVideos: readDeletedVideos
+		getDeletedVideos: readDeletedVideos,
+		addPlaylist: createPlaylist
 	}
 
 })("./dev.sqlite")
