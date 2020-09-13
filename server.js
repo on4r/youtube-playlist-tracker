@@ -2,8 +2,7 @@ const express = require("express")
 const bodyParser = require("body-parser")
 const https = require("https")
 const app = express()
-const youtubedl = require("./youtubedl")
-const DB = require("./database2")
+const DB = require("./database")
 const E = require("./helpers").E
 
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -38,7 +37,6 @@ app.post("/", async function(req, res) {
 		await DB.close()
 		res.render("pages/home", { message: messages.info, type: "info" })
 	} catch (e) {
-
 		// playlist does not exist and will therefore be added
 		try {
 			await DB.open()
@@ -54,6 +52,8 @@ app.post("/", async function(req, res) {
 		// ...
 
 	}
+
+	await DB.close()
 
 })
 
@@ -75,7 +75,7 @@ app.get("/*", async function(req, res) {
 							await DB.close()
 	} catch (e) {
 
-		console.log(e)
+		console.log("Error:",e)
 
 		if (e.type == "database") {
 			res.status(500).send("Something went wrong. Try again later.")
@@ -106,6 +106,8 @@ app.get("/*", async function(req, res) {
 
 	res.render("pages/playlist", viewData)
 
+	await DB.close()
+
 })
 
 
@@ -118,11 +120,6 @@ console.log("server listening at 8080")
 
 function validPlaylist(id) {
 	return new Promise((resolve, reject) => {
-
-		if (id.length > 50 || !/[\w-]+/.test(id))
-			reject(E("Invalid Playlist ID", "redirect"))
-
-		// pre-check successful, now for the real life test with a GET youtube request!
 		https.get(`https://www.youtube.com/playlist?list=${id}`, function({statusCode}) {
 			if (statusCode == 200) {
 				resolve(true)

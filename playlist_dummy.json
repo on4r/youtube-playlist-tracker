@@ -1,0 +1,21 @@
+{
+	"_type": "playlist",
+	"entries": [
+		{"_type": "url", "url": "uv98Gf_HHRQ", "ie_key": "Youtube", "id": "uv98Gf_HHRQ", "title": "Sokrates - Ahnherr der Philosophen"},
+		{"_type": "url", "url": "v4KJt3LgaOg", "ie_key": "Youtube", "id": "v4KJt3LgaOg", "title": "Seneca - Das Leben ist kurz"},
+		{"_type": "url", "url": "ltty-_xLMwE", "ie_key": "Youtube", "id": "ltty-_xLMwE", "title": "Platon   Ein Gastmahl der Liebe"},
+		{"_type": "url", "url": "9qar-dVOUNE", "ie_key": "Youtube", "id": "9qar-dVOUNE", "title": "Hypatia - Eine au\u00dfergew\u00f6hnliche Philosophin"},
+		{"_type": "url", "url": "oKVCFrt-TY4", "ie_key": "Youtube", "id": "oKVCFrt-TY4", "title": "Heraklit - Das Weltbild des antiken Denkers"},
+		{"_type": "url", "url": "nDQ_L0RmYaw", "ie_key": "Youtube", "id": "nDQ_L0RmYaw", "title": "Diogenes   Lebensphilosoph und Provokateur"},
+		{"_type": "url", "url": "JAjTXKMGXpE", "ie_key": "Youtube", "id": "JAjTXKMGXpE", "title": "Zenophon - Die Lebenskunst der Stoa"}
+	],
+	"id": "PL6cI1_8BvV-Yb9hCB_8AoFSAbF8gIyVVC",
+	"title": "Philosophie der Antike",
+	"uploader": "Philosophie",
+	"uploader_id": "UCt4EMbT6U53314MvMRUpFnw",
+	"uploader_url": "https://www.youtube.com/channel/UCt4EMbT6U53314MvMRUpFnw",
+	"extractor": "youtube:playlist",
+	"webpage_url": "PL6cI1_8BvV-Yb9hCB_8AoFSAbF8gIyVVC",
+	"webpage_url_basename": "PL6cI1_8BvV-Yb9hCB_8AoFSAbF8gIyVVC",
+	"extractor_key": "YoutubePlaylist"
+}

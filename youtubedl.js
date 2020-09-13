@@ -11,6 +11,7 @@ const deletedTriggerString = "[Deleted video]"
 let DB
 let NEW_PLAYLIST_OR_VIDEO = false
 
+//youtubeDL(process.argv[2])
 
 /*
  * Query YouTube for playlist info using the cli tool youtube-dl
