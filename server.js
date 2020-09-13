@@ -70,8 +70,8 @@ app.get("/*", async function(req, res) {
 							await DB.open()
 		playlist 		= 	await DB.getPlaylist(id)
 							//await playlistInProcess(playlist.id)
-		videos 			=	await DB.getVideosOfPlaylist(playlist.id)
-		deletedVideos 	= 	await DB.getDeletedVideos(videos)
+		videoIds 		=	await DB.getVideoIDsOfPlaylist(playlist.id)
+		deletedVideos 	= 	await DB.getDeletedVideos(videoIds)
 							await DB.close()
 	} catch (e) {
 
