@@ -2,7 +2,12 @@ const { exec } = require("child_process")
 const DB = require("./database")
 
 const deletedTriggerString = "[Deleted video]"
-const playlistsInProcess = []
+
+// REMOVE playlist from the "inProcess" Array
+//playlistsInProcess.splice(playlist.id, 1)
+
+// debug
+updateAllPlaylists()
 
 async function updateAllPlaylists() {
 
@@ -10,10 +15,10 @@ async function updateAllPlaylists() {
 
 	let playlists = await DB.allPlaylists()
 
-	playlists.forEach(playlist => {
+	// debug
+	playlists = playlists.filter(playlist => playlist.id == 6)
 
-		// ADD playlist to the "inProcess" Array
-		playlistsInProcess.push(playlist.id)
+	playlists.forEach(async playlist => {
 
 		try {
 
@@ -21,87 +26,30 @@ async function updateAllPlaylists() {
 			parsedPlaylist = await youtubeDl(playlist.url)
 
 			// UPDATE title and uploader_id
-			let values = {}
-
-			if (playlist.title != parsedPlaylist.title)
-				values.title = parsedPlaylist.title
-			else if (playlist.uploader_id != parsedPlaylist.uploader_id)
-				values.uploader_id = parsedPlaylist.uploader_id
-
-			if (values.title !== undefined || values.uploader_id !== undefined)
-				await DB.updatePlaylist(playlist.id, values)
+			await updatePlaylist(playlist, parsedPlaylist)
 
 			// CREATE or UPDATE videos
-			let videosToCreate = []
-
+			let videosProcessed = []
 			parsedPlaylist.entries.forEach(parsedVideo => {
-
-				try {
-					let video = await DB.getVideo(parsedVideo.url)
-					if (!video)
-						videosToCreate.push({
-							url: parsedVideo.url,
-							title: (parsedVideo.title === deletedTriggerString) ? "[Deleted]" : parsedVideo.title,
-							deleted: (parsedVideo.title === deletedTriggerString) ? 1 : 0
-						})
-					else
-						if (parsedVideo.title === deletedTriggerString && video.title !== "[Deleted]")
-							await DB.setVideoDeleted(video.id)
-				} catch (e) {
-					// DB.getVideo() can fail
-					// DB.markVideoAsDeleted can fail
-				}
-
+				videosProcessed.push(createOrUpdateVideos(parsedVideo))
 			})
 
-			await DB.addVideos(videosToCreate)
+			Promise.all(videosProcessed)
+				.then(removeEmptyEntries)
+				.then(DB.addVideos)
+				// CREATE OR DELETE JointRelations
+				.then(_ => {
+					createOrDeleteJointRelations(playlist.id, parsedPlaylist.entries)
+				})
 
-			// CREATE or DELETE Joint-Relations
-			let jointRelationsToCreate = []
+		} catch (error) {
 
-			let ids = await DB.getVideoIdsOfPlaylist(playlist.id)
-			let videos = await DB.getVideosById(ids)
-			let newVideos = await DB.getVideosByUrl(videosToCreate.map(video => video.url))
-
-			let urls = videos.map(video => video.url)
-			let parsedUrls = parsedPlaylist.entries.map(video => video.url)
-
-			// create an array which contains every url only once
-			[...new Set(...videoUrls, ...parsedVideoUrls)].forEach(url => {
-
-				if ( urls.includes(url) && !parsedUrls.includes(url) ) {
-
-					await DB.removeJointRelation(playlist.id, videos.filter(video => video.url === url).id)
-
-				} else if ( parsedUrls.includes(url) && !urls.includes(url) ) {
-
-					jointRelationsToCreate.push({
-						playlist_id: playlist.id,
-						video_id: newVideos.filter(video => video.url === url).id
-					})
-
-				}
-
-			})
-
-			await DB.addJointRelations(jointRelationsToCreate)
-
-			// REMOVE playlist from the "inProcess" Array
-			playlistsInProcess.splice(playlist.id, 1)
-
-		} catch (e) {
-
-			console.log("There was an error while trying to update a playlist")
-			console.error(e)
-
-			// REMOVE playlist from the "inProcess" Array
-			playlistsInProcess.splice(playlist.id, 1)
+			console.log("There was an error while trying to update the playlist", playlist.id, playlist.title)
+			console.error(error)
 
 		}
 
 	})
-
-	await DB.close()
 
 }
 
@@ -134,3 +82,89 @@ function youtubeDl(playlistID) {
 		})
 	})
 }
+
+async function updatePlaylist(playlist, parsedPlaylist) {
+
+	let values = {}
+
+	if (playlist.title != parsedPlaylist.title) {
+		values.title = parsedPlaylist.title
+	} else if (playlist.uploader_id != parsedPlaylist.uploader_id) {
+		values.uploader_id = parsedPlaylist.uploader_id
+	}
+
+	if (values.title !== undefined || values.uploader_id !== undefined)
+		await DB.updatePlaylist(playlist.id, values)
+
+}
+
+async function createOrUpdateVideos(parsedVideo) {
+
+	try {
+
+		let video = await DB.getVideo(parsedVideo.url)
+		if (!video) {
+			let videoToCreate = {
+				url: parsedVideo.url,
+				title: (parsedVideo.title === deletedTriggerString) ? "[Deleted]" : parsedVideo.title,
+				deleted: (parsedVideo.title === deletedTriggerString) ? 1 : 0
+			}
+			return videoToCreate
+		} else
+			if (parsedVideo.title === deletedTriggerString && video.deleted == 0)
+				await DB.setVideoDeleted(video.id)
+
+		return undefined
+
+	} catch (error) {
+		console.log("Database Error in createOrUpdate(parsedVideo)", error)
+		// DB.getVideo() can fail
+		// DB.markVideoAsDeleted can fail
+	}
+
+}
+
+function removeEmptyEntries(array) {
+	return array.reduce((acc, cur) => {
+		if (cur !== undefined)
+			acc.push(cur)
+		return acc
+	}, [])
+}
+
+async function createOrDeleteJointRelations(playlistId, parsedVideos) {
+
+	let jointRelationsToCreate = []
+	let jointRelationsToDelete = []
+
+	let videos = await DB.getAllVideosOfPlaylist(playlistId)
+	//  parsedVideos
+
+	let oldUrls = videos.map(video => video.url)
+	let newUrls = parsedVideos.map(video => video.url)
+	let allUrls = new Set(oldUrls.concat(newUrls))
+
+	for (let url of allUrls) {
+
+		if ( oldUrls.includes(url) && !newUrls.includes(url) ) {
+
+			await DB.removeJointRelation(playlistId, videos.find(video => video.url === url).id)
+
+		} else if ( newUrls.includes(url) && !oldUrls.includes(url) ) {
+
+			let videoFromDB = await DB.getVideo(url)
+
+			jointRelationsToCreate.push({
+				playlist_id: playlistId,
+				video_id: videoFromDB.id
+			})
+
+		}
+
+	}
+
+	// create all at once
+	await DB.addJointRelations(jointRelationsToCreate)
+
+}
+

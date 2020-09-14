@@ -66,36 +66,52 @@ app.get("/*", async function(req, res) {
 	let error = null
 
 	try {
-							await validPlaylist(id)
-							await DB.open()
-		playlist 		= 	await DB.getPlaylist(id)
-							//await playlistInProcess(playlist.id)
-		videoIds 		=	await DB.getVideoIDsOfPlaylist(playlist.id)
-		deletedVideos 	= 	await DB.getDeletedVideos(videoIds)
-							await DB.close()
-	} catch (e) {
 
-		console.log("Error:",e)
-
-		if (e.type == "database") {
-			res.status(500).send("Something went wrong. Try again later.")
+		if (!await validPlaylist(id)) {
+			res.status(400).send("Invalid playlist id")
 			return
-		} else if (e.type == "redirect") {
-			res.status(400).send("Invalid Playlist ID")
-			return
-		} else {
-			error = e.message
 		}
 
+		await DB.open()
+
+		playlist = await DB.getPlaylist(id)
+		if (!playlist) {
+			error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
+			return
+		}
+
+		// await playlistInProcess(playlist.id)
+
+		videoIds = await DB.getVideoIDsOfPlaylist(playlist.id)
+		if (!videosIds.length) {
+			error = "This playlist is empty."
+			return
+		}
+
+		deletedVideos = await DB.getDeletedVideos(videoIds)
+		if (!deletedVideos.length) {
+			error = "This playlist contains no deleted videos!"
+			return
+		}
+
+	} catch (error) {
+
+		console.log("Database Error:", error)
+		res.status(500).send("Something went wrong. Try again later.")
+		return
+
+	} finally {
+		await DB.close()
 	}
 
-	const restoredVideosFirst = (a, b) => {
-		return (a.title == "[Deleted]") ? 1 : -1
-	}
+	// from here on we only need to format/fill a few variables
+	// which are used in our view (playlist.ejs)
 
+	// sort restored videos on top
 	if (deletedVideos)
 		deletedVideos.sort(restoredVideosFirst)
 
+	// prepare the viewData object
 	let viewData = {
 		playlist,
 		videos,
@@ -106,8 +122,6 @@ app.get("/*", async function(req, res) {
 
 	res.render("pages/playlist", viewData)
 
-	await DB.close()
-
 })
 
 
@@ -115,19 +129,25 @@ app.listen(8080)
 console.log("server listening at 8080")
 
 // -----------
-// FUNCTIONS
-// ---
+// Helpers
+// -----------
+// validPlaylist(id)	fires an http request to youtube to check playlist
+// restoredVideosFirst(a, b)	sorting function
+// -----------
 
 function validPlaylist(id) {
 	return new Promise((resolve, reject) => {
 		https.get(`https://www.youtube.com/playlist?list=${id}`, function({statusCode}) {
-			if (statusCode == 200) {
+			if (statusCode == 200)
 				resolve(true)
-			} else {
-				reject(E("Invalid Playlist ID", "redirect"))
-			}
+			else
+				resolve(false)
 		})
 	})
+}
+
+function restoredVideosFirst(a, b) {
+	return (a.title == "[Deleted]") ? 1 : -1
 }
 
 /*

@@ -1,5 +1,4 @@
 const sqlite3 = require('sqlite3').verbose()
-const E = require("./helpers.js").E
 
 const DB = ((dbLocation) => {
 
@@ -9,9 +8,9 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db = new sqlite3.Database(dbLocation, sqlite3.OPEN_READWRITE, function(error) {
 				if (error)
-					reject(E(error.message, "database"))
-				console.log("Opened database at location:", dbLocation)
+					reject(error)
 				resolve(0)
+				console.log("Opened database at location:", dbLocation)
 			})
 		})
 	}
@@ -22,8 +21,8 @@ const DB = ((dbLocation) => {
 				db.close(function(error) {
 					if (error)
 						throw error
-					console.log("Closed database")
 					resolve(0)
+					console.log("Closed database")
 				})
 			} catch (e) {
 				resolve(0)
@@ -35,9 +34,9 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db.get("SELECT * FROM playlists WHERE url = ?", [url], function(error, playlist) {
 				if (error)
-					reject(E(error, "database"))
+					reject(error)
 				else if (playlist === undefined)
-					reject(E("This playlist is currently not tracked by us."))
+					resolve()
 				else
 					resolve(playlist)
 			})
@@ -48,9 +47,9 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db.all("SELECT video_id FROM playlists_videos WHERE playlist_id = ?", [id], function(error, videos) {
 				if (error)
-					reject(E(error, "database"))
-				else if (videos === undefined || videos.length == 0)
-					reject(E("This playlist is empty."))
+					reject(error)
+				else if (videos === undefined || !videos.length)
+					resolve([])
 				else {
 					resolve(videos.map(video => video.video_id))
 				}
@@ -63,9 +62,9 @@ const DB = ((dbLocation) => {
 			let placeholder = ", ?".repeat(videoIds.length - 1)
 			db.all(`SELECT title, url FROM videos WHERE id IN (? ${placeholder}) AND deleted = 1`, videoIds, function(error, deletedVideos) {
 				if (error)
-					reject(E(error, "database"))
-				else if (deletedVideos === undefined || deletedVideos.length == 0)
-					reject(E("This playlist contains no deleted Videos!"))
+					reject(error)
+				else if (deletedVideos === undefined || !deletedVideos.length)
+					resolve([])
 				else
 					resolve(deletedVideos)
 			})
@@ -76,7 +75,7 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db.run("INSERT INTO playlists(url) VALUES(?)", [url], function(error) {
 				if (error) {
-					reject(E(error, "database"))
+					reject(error)
 				} else {
 					resolve(this.changes)
 					console.log("Added a new playlist", {id: this.lastID, url})
@@ -89,8 +88,8 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db.all("SELECT * FROM playlists", function(error, playlists) {
 				if (error) {
-					console.log(E(error, "database"))
-					reject([])
+					console.log(error)
+					resolve([])
 				} else {
 					resolve(playlists)
 				}
@@ -101,6 +100,7 @@ const DB = ((dbLocation) => {
 	function updatePlaylist(id, data) {
 
 		let fields = []
+		let values = []
 
 		for ( [field, value] of Object.entries(data) ) {
 			fields.push(`${field} = ?`)
@@ -112,9 +112,10 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db.run(`UPDATE playlists SET ${fields} WHERE id = ?`, [...values, id], function(error) {
 				if (error) {
-					reject(E(error, "database"))
+					reject(error)
 				} else {
 					resolve()
+					console.log("Updated a playlist with id", this.lastID)
 				}
 			})
 		})
@@ -124,7 +125,7 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db.get("SELECT * FROM videos WHERE url = ?", [url], function(error, video) {
 				if (error) {
-					reject(E(error, "database"))
+					reject(error)
 				} else if (video === undefined) {
 					resolve(null)
 				} else {
@@ -158,12 +159,12 @@ const DB = ((dbLocation) => {
 				values.push(url, title, deleted)
 			}
 
-			db.run(`INSERT INTO video (url, title, deleted) VALUES ${placeholder}`, values, function(error) {
+			db.run(`INSERT INTO videos (url, title, deleted) VALUES ${placeholder}`, values, function(error) {
 				if (error) {
-					reject(E(error, "database"))
+					reject(error)
 				} else {
-					console.log(`Created ${this.changes} new Videos`)
 					resolve()
+					console.log(`Created ${this.changes} new Videos`)
 				}
 			})
 
@@ -174,10 +175,10 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db.run("UPDATE videos SET deleted = 1 WHERE id = ?", [id], function(error) {
 				if (error) {
-					reject(E(error, "database"))
+					reject(error)
 				} else {
-					console.log("Marked video with id", id, "as deleted")
 					resolve()
+					console.log("Marked video with id", id, "as deleted")
 				}
 			})
 		})
@@ -200,7 +201,7 @@ const DB = ((dbLocation) => {
 
 			db.all(`SELECT * FROM videos WHERE id IN (${placeholder})`, ids, function(error, videos) {
 				if (error)
-					reject(E(error, "database"))
+					reject(error)
 				else if (videos === undefined || videos.length == 0)
 					resolve([])
 				else
@@ -226,7 +227,7 @@ const DB = ((dbLocation) => {
 
 			db.all(`SELECT * FROM videos WHERE url IN (${placeholder})`, urls, function(error, videos) {
 				if (error)
-					reject(E(error, "database"))
+					reject(error)
 				else if (videos === undefined || videos.length == 0)
 					resolve([])
 				else
@@ -238,17 +239,18 @@ const DB = ((dbLocation) => {
 	function deleteJointRelation(playlistId, videoId) {
 		return new Promise((resolve, reject) => {
 			db.run("DELETE FROM playlists_videos WHERE playlist_id = ? AND video_id = ?", [playlistId, videoId], function(error) {
-				if (error)
-					reject(E(error, "database"))
-				else
+				if (error) {
+					reject(error)
+				} else {
 					resolve()
+					console.log("Removed a Joint-Relation with id", this.lastID)
+				}
 			})
 		})
 	}
 
 	function createJointRelations(data) {
-		// data : [{url, title, deleted}, {url, title, deleted}]
-		// query : "INSERT INTO videos (id, title, deleted) VALUES (?, ?, ?), (?, ?, ?), ..."
+		// data : [{playlist_id, video_id}, {playlist_id, video_id}]
 		return new Promise((resolve, reject) => {
 
 			// return if array is empty
@@ -272,13 +274,48 @@ const DB = ((dbLocation) => {
 
 			db.run(`INSERT INTO playlists_videos (playlist_id, video_id) VALUES ${placeholder}`, values, function(error) {
 				if (error) {
-					reject(E(error, "database"))
+					reject(error)
 				} else {
-					console.log(`Created ${this.changes} new Videos`)
 					resolve()
+					console.log(`Created ${this.changes} new Joint-Relations`)
 				}
 			})
 
+		})
+	}
+
+	function getAllVideosOfPlaylist(id) {
+		return new Promise((resolve, reject) => {
+			/*
+			 * 1. get all CURRENT joint relations of playlist
+			 * 2. => [video_id, video_id, video_id, ...]
+			 * 3. get the corresponding urls of these video
+			 * 4. => [url, url, url, ...]
+			 */
+			db.all("SELECT video_id FROM playlists_videos WHERE playlist_id = ?", [id], function(error, videoIds) {
+				if (error)
+					reject(error)
+				else if (videoIds === undefined || !videoIds.length)
+					resolve([])
+				else {
+
+					let placeholder = []
+					videoIds.forEach(_ => {
+						placeholder.push("?")
+					})
+					placeholder.join(", ")
+
+					db.all(`SELECT * FROM videos WHERE id IN (${placeholder})`, videoIds, function(error, videos) {
+						if (error)
+							reject(error)
+						else if (videos === undefined || !videos.length)
+							resolve([])
+						else
+							resolve(videos)
+					})
+				}
+
+			})
 		})
 	}
 
@@ -297,7 +334,8 @@ const DB = ((dbLocation) => {
 		getVideosById: readVideosWithIds,
 		getVideosByUrl: readVideosWithUrls,
 		removeJointRelation: deleteJointRelation,
-		addJointRelations: createJointRelations
+		addJointRelations: createJointRelations,
+		getAllVideosOfPlaylist
 	}
 
 /*
