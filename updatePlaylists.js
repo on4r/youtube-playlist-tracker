@@ -16,7 +16,7 @@ async function updateAllPlaylists() {
 	let playlists = await DB.allPlaylists()
 
 	// debug
-	playlists = playlists.filter(playlist => playlist.id == 6)
+	//playlists = playlists.filter(playlist => playlist.id == 6)
 
 	playlists.forEach(async playlist => {
 
@@ -26,7 +26,7 @@ async function updateAllPlaylists() {
 			parsedPlaylist = await youtubeDl(playlist.url)
 
 			// UPDATE title and uploader_id
-			await updatePlaylist(playlist, parsedPlaylist)
+			await updatePlaylistFields(playlist, parsedPlaylist)
 
 			// CREATE or UPDATE videos
 			let videosProcessed = []
@@ -52,9 +52,6 @@ async function updateAllPlaylists() {
 	})
 
 }
-
-// interface for checking the process of playlist update
-// function updateProcessOfPlaylist(id) {}
 
 /*
  * Query YouTube for playlist info using the cli tool youtube-dl
@@ -83,7 +80,7 @@ function youtubeDl(playlistID) {
 	})
 }
 
-async function updatePlaylist(playlist, parsedPlaylist) {
+async function updatePlaylistFields(playlist, parsedPlaylist) {
 
 	let values = {}
 
@@ -137,7 +134,7 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 	let jointRelationsToCreate = []
 	let jointRelationsToDelete = []
 
-	let videos = await DB.getAllVideosOfPlaylist(playlistId)
+	let videos = await DB.getVideosByPlaylist(playlistId)
 	//  parsedVideos
 
 	let oldUrls = videos.map(video => video.url)
@@ -163,8 +160,31 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 
 	}
 
-	// create all at once
-	await DB.addJointRelations(jointRelationsToCreate)
+	// chunk the array because node sqlite can only handle a limited amount of variables SQLITE_MAX_VARIABLE_NUMBER
+	let chunkedArray = chunkArray(jointRelationsToCreate, 40)
+	for (let chunk of chunkedArray) {
+		console.log("processing a chunk to insert JR", chunk)
+		await DB.addJointRelations(chunk)
+	}
 
 }
 
+/**
+ * Returns an array with arrays of the given size.
+ *
+ * @param myArray {Array} Array to split
+ * @param chunkSize {Integer} Size of every group
+ *
+ */
+function chunkArray(myArray, chunk_size){
+    var results = [];
+
+    while (myArray.length) {
+        results.push(myArray.splice(0, chunk_size));
+    }
+
+    return results;
+}
+// Split in group of 3 items
+//var result = chunkArray([1,2,3,4,5,6,7,8], 3);
+// Outputs : [ [1,2,3] , [4,5,6] ,[7,8] ]

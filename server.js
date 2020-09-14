@@ -1,3 +1,5 @@
+// todo: cleanup POST("/")
+
 const express = require("express")
 const bodyParser = require("body-parser")
 const https = require("https")
@@ -61,11 +63,11 @@ app.get("/*", async function(req, res) {
 
 	let id = req.originalUrl.substring(1)
 	let playlist = {}
-	let videos = []
+	let videoIds = []
 	let deletedVideos = []
 	let error = null
 
-	try {
+	gatherViewData: try {
 
 		if (!await validPlaylist(id)) {
 			res.status(400).send("Invalid playlist id")
@@ -77,26 +79,24 @@ app.get("/*", async function(req, res) {
 		playlist = await DB.getPlaylist(id)
 		if (!playlist) {
 			error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
-			return
+			break gatherViewData
 		}
 
 		// await playlistInProcess(playlist.id)
-
-		videoIds = await DB.getVideoIDsOfPlaylist(playlist.id)
-		if (!videosIds.length) {
+		videoIds = await DB.getVideoIdsOfPlaylist(playlist.id)
+		if (!videoIds.length) {
 			error = "This playlist is empty."
-			return
+			break gatherViewData
 		}
 
 		deletedVideos = await DB.getDeletedVideos(videoIds)
 		if (!deletedVideos.length) {
 			error = "This playlist contains no deleted videos!"
-			return
+			break gatherViewData
 		}
 
 	} catch (error) {
 
-		console.log("Database Error:", error)
 		res.status(500).send("Something went wrong. Try again later.")
 		return
 
@@ -108,16 +108,16 @@ app.get("/*", async function(req, res) {
 	// which are used in our view (playlist.ejs)
 
 	// sort restored videos on top
-	if (deletedVideos)
+	if (deletedVideos.length)
 		deletedVideos.sort(restoredVideosFirst)
 
 	// prepare the viewData object
 	let viewData = {
 		playlist,
-		videos,
+		videoIds,
 		deletedVideos,
 		error,
-		deletedPercentage: ((deletedVideos.length / videos.length) * 100).toFixed(1)
+		deletedPercentage: ((deletedVideos.length / videoIds.length) * 100).toFixed(1)
 	}
 
 	res.render("pages/playlist", viewData)

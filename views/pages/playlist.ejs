@@ -2,16 +2,15 @@
 
 <a href="/" class="logo">YouTube Playlist Tracker</a>
 
+<% if (locals.playlist) { %>
 <h1><a class="no-highlight" href="https://www.youtube.com/playlist?list=<%= playlist.url %>" target="_blank"><%= playlist.title %></a></h1>
 <p class="subtitle">by <a class="no-highlight" href="https://www.youtube.com/user/<%= playlist.uploader_id %>" target="_blank"><%= playlist.uploader_id %></a></p>
-
-<p><span class="error"><%= deletedVideos.length %></span> / <%= videos.length %> (<%= deletedPercentage %>%)</p>
+<% } %>
 
 <% if (locals.error) { %>
-	<p class="error"><%= message %></p>
-<% } else if (locals.success) { %>
-	<p class="success"><%= message %></p>
+	<p class="error"><%- error %></p>
 <% } else { %>
+<p><span class="error"><%= deletedVideos.length %></span> / <%= videoIds.length %> (<%= deletedPercentage %>%)</p>
 <ul>
 	<% deletedVideos.forEach(function(video) { %>
 		<li>
@@ -19,7 +18,7 @@
 			<span contenteditable="true"><%= video.title %></span>
 			<a class="search-link" href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
 		<% } else { %>
-			<span class="success"><%= video.title %></span>
+			<span class="error"><%= video.title %></span>
 		<% } %>
 		</li>
 	<% }) %>
