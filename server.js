@@ -1,11 +1,10 @@
-// todo: cleanup POST("/")
-
 const express = require("express")
 const bodyParser = require("body-parser")
 const https = require("https")
 const app = express()
+
 const DB = require("./database")
-const E = require("./helpers").E
+const { parsePlaylistAndUpdateTables } = require("./updateDatabaseLogic")
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static(__dirname + '/public'))
@@ -24,38 +23,42 @@ app.post("/", async function(req, res) {
 		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="/${id}">here</a>.`,
 		dberror: `Ups! Something went wrong. Please try again later.`
 	}
+	let playlist = null
 
 	// check if id passed is a valid youtube playlist
-	try {
-		await validPlaylist(id)
-	} catch (e) {
+	if (!await validPlaylist(id))
 		res.render("pages/home", { message: messages.invalid, type: "error" })
-	}
 
 	// check if playlist is already indexed
-	try {
-		await DB.open()
-		await DB.getPlaylist(id)
-		await DB.close()
+	await DB.open()
+	playlist = await DB.getPlaylist(id)
+
+	if (playlist) {
+
 		res.render("pages/home", { message: messages.info, type: "info" })
-	} catch (e) {
+		await DB.close()
+
+	} else {
+
 		// playlist does not exist and will therefore be added
 		try {
-			await DB.open()
-			await DB.addPlaylist(id)
-			await DB.close()
-			res.render("pages/home", { message: messages.success, type: "success" })
-		} catch (e) {
-			res.render("pages/home", { message: messages.dberror, type: "error" })
-		}
 
-		// start the async "youtube-dl and fill database" script
-		// updateDatabase()
-		// ...
+			playlist = await DB.addPlaylist(id)
+			res.render("pages/home", { message: messages.success, type: "success" })
+			// start the async "youtube-dl and fill database" script
+			await parsePlaylistAndUpdateTables(playlist)
+
+		} catch (e) {
+
+			console.error("Database Error in app.post('/')", e)
+			res.render("pages/home", { message: messages.dberror, type: "error" })
+
+		} finally {
+			DB.close()
+		}
 
 	}
 
-	await DB.close()
 
 })
 

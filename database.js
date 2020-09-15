@@ -38,7 +38,7 @@ const DB = ((dbLocation) => {
 				if (error)
 					reject(error)
 				else if (playlist === undefined)
-					resolve({})
+					resolve(null)
 				else
 					resolve(playlist)
 			})
@@ -91,7 +91,7 @@ const DB = ((dbLocation) => {
 				if (error) {
 					reject(error)
 				} else {
-					resolve(this.changes)
+					resolve({id: this.lastID, url})
 					console.log("Added a new playlist", {id: this.lastID, url})
 				}
 			})
@@ -102,7 +102,8 @@ const DB = ((dbLocation) => {
 		return new Promise((resolve, reject) => {
 			db.all("SELECT * FROM playlists", function(error, playlists) {
 				if (error) {
-					console.log(error)
+					reject(error)
+				} else if (playlists === undefined || !playlists.length) {
 					resolve([])
 				} else {
 					resolve(playlists)
@@ -129,7 +130,7 @@ const DB = ((dbLocation) => {
 					reject(error)
 				} else {
 					resolve()
-					console.log("Updated a playlist with id", this.lastID)
+					console.log("Updated a playlist with id", id)
 				}
 			})
 		})
@@ -291,7 +292,7 @@ const DB = ((dbLocation) => {
 					reject(error)
 				} else {
 					resolve()
-					console.log(`Created ${this.changes} new Joint-Relations`)
+					console.log(`Created ${this.changes} Joint-Relations`)
 				}
 			})
 
@@ -334,9 +335,50 @@ const DB = ((dbLocation) => {
 		})
 	}
 
+	function getJointRelationsOfPlaylist(id) {
+		return new Promise((resolve, reject) => {
+			db.all("SELECT * FROM playlists_videos WHERE playlist_id = ?", id, function(error, jointRelations) {
+				if (error)
+					reject(error)
+				else if (jointRelations === undefined || jointRelations.length == 0)
+					resolve([])
+				else
+					resolve(jointRelations)
+			})
+		})
+	}
+
+	function deleteJointRelations(ids) {
+		return new Promise((resolve, reject) => {
+
+			// return if array is empty
+			if (!ids.length) {
+				resolve()
+				return
+			}
+
+			// generate the placeholder string with all the question marks
+			let placeholder = []
+			ids.forEach(() => {
+				placeholder.push("?")
+			})
+			placeholder = placeholder.join(", ")
+
+			db.run(`DELETE FROM playlists_videos WHERE id IN (${placeholder})`, ids, function(error) {
+				if (error) {
+					reject(error)
+				} else {
+					resolve()
+					console.log(`Deleted ${this.changes} Joint-Relations`)
+				}
+			})
+
+		})
+	}
+
 	return {
 		open: openDatabase,
-		close: closeDatabase,
+		close: closeDatabase, // never rejects
 		getPlaylist,
 		getVideoIdsOfPlaylist,
 		getDeletedVideos,
@@ -344,6 +386,7 @@ const DB = ((dbLocation) => {
 		getVideosById,
 		getVideosByUrl,
 		getVideosByPlaylist,
+		getJointRelationsOfPlaylist,
 		allPlaylists,
 		addPlaylist,
 		addVideos,
@@ -351,6 +394,7 @@ const DB = ((dbLocation) => {
 		updatePlaylist,
 		setVideoDeleted,
 		removeJointRelation,
+		deleteJointRelations,
 	}
 
 })("./dev.sqlite")
