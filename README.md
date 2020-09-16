@@ -1,4 +1,10 @@
-# lessons learned
+# Setup
+
+1. add `YTDL_BIN_PATH=/path/to/desired/youtube-dl` to your `.bash_profile` / `.zsh_profile`
+2. install packages `npm install`
+3. start server `node server.js`
+
+## lessons learned
 
 1. `ls -X` sorts by filetype 
 2. *sqlite3* is limited in how many variables you can pass the query (search `SQLITE_MAX_VARIABLE_NUMBER`)
@@ -8,6 +14,20 @@
 5. Add charset meta tag: `<meta charset="utf-8">`
 6. Add stylesheet in head `<link rel="stylesheet" href="styles.css">`
 7. Javascript has in the latest spec `Promise.allSettled` which only resolves (with all values) after all passed Promises are finished
+8. In *vim* `Ctrl-O` jumps to the last cursor position after a move command. 
+  And `*` jumps to the next occurrence of whatever word is below the cursor. 
+  To manipulate folds use `zO`,`zC`,`zA`,`zR`,`zM` (the last two manipulate all folds in the file)
+9. *express*: always `return` after `res.send`, `res.render`, etc. whatever... save yourself some nerves :D
+
+### get latest release url from github
+
+    curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/youtube-dl/releases/latest/
+    => https://github.com/ytdl-org/youtube-dl/releases/tag/2020.09.14
+
+    https://github.com/ytdl-org/youtube-dl/releases/download/2020.09.14/MD5SUMS
+    https://github.com/ytdl-org/youtube-dl/releases/download/2020.09.14/youtube-dl
+
+compare first line of *MD5SUM* (`cat MD5SUM | head -1`) with the binary
 
 ## einige playlist ids
 

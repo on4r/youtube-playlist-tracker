@@ -1,38 +1,50 @@
-const { exec } = require("child_process")
 const DB = require("./database")
-const allSettled = require('promise.allsettled')
+const allSettled = require("promise.allsettled")
+const { parsePlaylist } = require("./parser")
 
 /**
- * Pulls all playlists from database and runs the update function on them
+ * Find all playlists in DB and pass them to the parsePlaylistAndUpdateTables() function
+ *
  * @return {Promise}
  */
 async function updateAllPlaylists() {
+	return new Promise(async (resolve, reject) => {
+		try {
+			// first we open the database
+			await DB.open()
 
-	try {
+			// get all playlists from database
+			let playlists = await DB.allPlaylists()
+			if (!playlists.length) {
+				await DB.close()
+				resolve()
+				return
+			}
 
-		// get all playlists from database
-		let playlists = await DB.allPlaylists()
-		if (!playlists.length)
-			return
+			// here we use map to return an array of running promises
+			allSettled(playlists.map(parsePlaylistAndUpdateTables))
+				.then(async (results) => {
+					// after all promises finished we close the database
+					await DB.close()
+					resolve()
+				})
 
-		// first we open the database
-		await DB.open()
-
-		// here we use map to return an array of running promises
-		allSettled(playlists.map(parsePlaylistAndUpdateTables))
-			.then(results => {
-				// after all promises finished we close the database
-				DB.close()
-			})
-
-	} catch (e) {
-		console.log("Database Error in updateAllPlaylists()", e)
-	}
+		} catch (e) {
+			console.log("Database Error in updateAllPlaylists()")
+			await DB.close()
+			reject(e)
+		}
+	})
 }
 
 /**
- * This function combines all the steps needed to updated all tables after youtube-dl returned parsed data
- * @param	{Object}	playlist	The playlist to process {id, url}
+ * Orchestrate all steps needed to update all tables connected to a playlist
+ *
+ * @param	{Object}	playlist - The playlist to process
+ * @param	{Number}	playlist.id
+ * @param	{String}	playlist.url
+ * @param	{String}	[playlist.title]
+ * @param	{String}	[playlist.uploader_id]
  * @return	{Promise}
  */
 async function parsePlaylistAndUpdateTables(playlist) {
@@ -40,12 +52,11 @@ async function parsePlaylistAndUpdateTables(playlist) {
 	try {
 
 		// PARSE playlist
-		parsedPlaylist = await youtubeDl(playlist.url)
+		parsedPlaylist = await parsePlaylist(playlist.url)
 		parsedVideos = parsedPlaylist.entries
 
 		await updatePlaylist(playlist, parsedPlaylist)
-		let videos = await getVideos(parsedVideos)
-		await createOrUpdateVideos(videos, parsedVideos)
+		await createOrUpdateVideos(parsedVideos)
 		await createOrDeleteJointRelations(playlist.id, parsedVideos)
 
 	} catch (error) {
@@ -57,35 +68,9 @@ async function parsePlaylistAndUpdateTables(playlist) {
 
 }
 
-/**
- * Query YouTube for playlist info using the cli tool youtube-dl
- *
- * @param	{String}	playlistID	A YouTube Playlist ID
- * @return	{Promise}				Resolves with parsed playlist as JSON or rejects with error
- */
-function youtubeDl(playlistID) {
-	return new Promise((resolve, reject) => {
-		exec(`youtube-dl --dump-single-json --flat-playlist ${playlistID}`, (error, stdout, stderr) => {
-
-			if (error || stderr) {
-				reject(stderr)
-				return
-			}
-
-			try {
-				let parsedPlaylist = JSON.parse(stdout)
-				console.log(`Playlist "${parsedPlaylist.title}" by "${parsedPlaylist.uploader_id}" parsed.`)
-				resolve(parsedPlaylist)
-			} catch (e) {
-				reject(e)
-			}
-
-		})
-	})
-}
 
 /**
- * Updates columns of a playlist if they changed meanwhile
+ * Update columns of a playlist
  *
  * @param	{Object}	playlist - The playlist from the database
  * @param	{Object}	parsedPlaylist - The parsed playlists from youtube-dl
@@ -106,13 +91,15 @@ async function updatePlaylist(playlist, parsedPlaylist) {
 
 }
 
-async function getVideos(videos) {
-	let urls = videos.map(v => v.url)
-	return await processChunked(DB.getVideosByUrl, urls, 40)
-}
+/**
+* Create new videos or update existing ones
+*
+* @param	{Array}	parsedVideos
+* @return	{Promise}
+*/
+async function createOrUpdateVideos(parsedVideos) {
 
-async function createOrUpdateVideos(videos, parsedVideos) {
-
+	let videos = await processChunked(DB.getVideosByUrl, parsedVideos.map(v => v.url), 40)
 	let videosToCreate = []
 	let videosToUpdate = []
 	let urls = videos.map(v => v.url)
@@ -139,6 +126,13 @@ async function createOrUpdateVideos(videos, parsedVideos) {
 }
 
 
+/**
+* Create new joint-relations or delete existing ones because videos got deleted from the playlist
+*
+* @param	{Number}	playlistId
+* @param	{Array}		parsedVideos
+* @return	{Promise}
+*/
 async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 
 	let jointRelationsToCreate = []
@@ -163,8 +157,6 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 
 			jointRelationsToDelete.push(...ids)
 
-			// nice side effect: also deletes duplicates!
-
 		} else if ( newUrls.includes(url) && !oldUrls.includes(url) ) {
 
 			jointRelationsToCreate.push({
@@ -185,8 +177,16 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 // HELPERS
 // =============================================
 
+/**
+ * Compare a video title with a specific string which youtube-dl adds for parsed videos which got deleted
+ *
+ * @param	{String}	title
+ * @return	{Boolean}
+ */
 function isDeleted(title) {
+
 	return (title === "[Deleted video]") ? true : false
+
 }
 
 /**
@@ -199,7 +199,8 @@ function isDeleted(title) {
  * @param chunkSize {Integer} Size of every group
  *
  */
-function chunkArray(myArray, chunk_size){
+function chunkArray(myArray, chunk_size) {
+
     var results = [];
 
     while (myArray.length) {
@@ -207,6 +208,7 @@ function chunkArray(myArray, chunk_size){
     }
 
     return results;
+
 }
 
 /**
@@ -219,6 +221,7 @@ function chunkArray(myArray, chunk_size){
  * @return	{Promise}	Resolves with return of function or Rejects with error
  */
 async function processChunked(fn, array, size) {
+
 	let results = []
 
 	for ( let chunk of chunkArray(array, size) ) {

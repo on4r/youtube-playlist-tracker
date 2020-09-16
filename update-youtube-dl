@@ -1,0 +1,20 @@
+#!/bin/bash
+BIN_PATH=/home/on4r/code/playground/downloads/youtube-dl-test
+
+LATEST_RELEASE_TAG=$(curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/youtube-dl/releases/latest/ | cut -d/ -f8)
+LATEST_RELEASE_DOWNLOADS_URL="https://github.com/ytdl-org/youtube-dl/releases/download/$LATEST_RELEASE_TAG"
+LATEST_CHECKSUM=$(curl -Ls "$LATEST_RELEASE_DOWNLOADS_URL/MD5SUMS" | head -1 | cut -d ' ' -f1)
+CURRENT_CHECKSUM=$(md5sum $BIN_PATH | cut -d ' ' -f1)
+
+echo "local: $CURRENT_CHECKSUM"
+echo "latest: $LATEST_CHECKSUM"
+
+diff <(echo $CURRENT_CHECKSUM) <(echo $LATEST_CHECKSUM)
+
+if [[ $? -eq 1 ]]; then
+	echo "checksum changed. update youtube-dl..."
+	curl -Ls "$LATEST_RELEASE_DOWNLOADS_URL/youtube-dl" -o $BIN_PATH
+	echo "downloaded latest youtube-dl binary to $BIN_PATH"
+else
+	echo "nothing changed. dont update youtube-dl."
+fi

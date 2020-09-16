@@ -1,11 +1,12 @@
 const express = require("express")
 const bodyParser = require("body-parser")
-const https = require("https")
-const app = express()
 
 const DB = require("./database")
 const { parsePlaylistAndUpdateTables } = require("./updateDatabaseLogic")
+const { validPlaylist } = require("./parser")
+const CRON = require("./cron")
 
+const app = express()
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static(__dirname + '/public'))
 app.set("view engine", "ejs")
@@ -21,13 +22,21 @@ app.post("/", async function(req, res) {
 		invalid: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
 		info: `We already indexed this playlist. You can find it <a href='/${id}'>here</a>.`,
 		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="/${id}">here</a>.`,
-		dberror: `Ups! Something went wrong. Please try again later.`
+		dberror: `Ups! Something went wrong. Please try again later.`,
+		dbupdate: `We are currently updating our database. Please try again later.`
 	}
 	let playlist = null
 
+	if (CRON.updateInProgress()) {
+		res.render("pages/home", { message: messages.dbupdate, type: "error" })
+		return
+	}
+
 	// check if id passed is a valid youtube playlist
-	if (!await validPlaylist(id))
+	if (!await validPlaylist(id)) {
 		res.render("pages/home", { message: messages.invalid, type: "error" })
+		return
+	}
 
 	// check if playlist is already indexed
 	await DB.open()
@@ -37,6 +46,7 @@ app.post("/", async function(req, res) {
 
 		res.render("pages/home", { message: messages.info, type: "info" })
 		await DB.close()
+		return
 
 	} else {
 
@@ -52,13 +62,13 @@ app.post("/", async function(req, res) {
 
 			console.error("Database Error in app.post('/')", e)
 			res.render("pages/home", { message: messages.dberror, type: "error" })
+			return
 
 		} finally {
 			DB.close()
 		}
 
 	}
-
 
 })
 
@@ -131,36 +141,12 @@ app.get("/*", async function(req, res) {
 app.listen(8080)
 console.log("server listening at 8080")
 
-// -----------
-// Helpers
-// -----------
-// validPlaylist(id)	fires an http request to youtube to check playlist
-// restoredVideosFirst(a, b)	sorting function
-// -----------
 
-function validPlaylist(id) {
-	return new Promise((resolve, reject) => {
-		https.get(`https://www.youtube.com/playlist?list=${id}`, function({statusCode}) {
-			if (statusCode == 200)
-				resolve(true)
-			else
-				resolve(false)
-		})
-	})
-}
+// =============================================
+// HELPERS
+// =============================================
 
 function restoredVideosFirst(a, b) {
 	return (a.title == "[Deleted]") ? 1 : -1
 }
 
-/*
-function playlistInProcess(id) {
-
-	//let inProcess =
-
-	if (inProcess)
-		throw E("Playlist getting processed. Please check back in a few minutes.")
-	else
-		return inProcess
-
-}*/
