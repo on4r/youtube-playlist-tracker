@@ -13,7 +13,7 @@ const APP = express()
 const ROUTER = express.Router()
 const PORT = process.env["YPT_APP_PORT"] || 8080
 const BASE_URL = process.env["YPT_APP_BASE_URL"] || "/"
-const messages = function({id = 0}) {
+const messages = function({id} = {}) {
 	return {
 		invalid: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
 		info: `We already indexed this playlist. You can find it <a href='${BASE_URL}${id}'>here</a>.`,
