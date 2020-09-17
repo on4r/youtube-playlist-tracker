@@ -12,7 +12,7 @@ const DB = ((dbLocation) => {
 				if (error)
 					reject(error)
 				resolve(0)
-				console.log("Opened database at location:", dbLocation)
+				console.log("DATABASE: opened ", dbLocation)
 			})
 		})
 	}
@@ -24,7 +24,7 @@ const DB = ((dbLocation) => {
 					if (error)
 						throw error
 					resolve(0)
-					console.log("Closed database")
+					console.log("DATBASE: closed")
 				})
 			} catch (e) {
 				resolve(0)
@@ -225,7 +225,7 @@ const DB = ((dbLocation) => {
 		})
 	}
 
-	function getVideosByUrl(urls) {
+	function getVideosByUrls(urls) {
 		return new Promise((resolve, reject) => {
 
 			// return if array is empty
@@ -376,6 +376,25 @@ const DB = ((dbLocation) => {
 		})
 	}
 
+	function deleteJointRelationsOfPlaylistByVideoIds(playlistId, videoIds) {
+		return new Promise((resolve, reject) =>  {
+
+			if (!videoIds.length) {
+				resolve()
+				return
+			}
+
+			db.run(`DELETE FROM playlists_videos WHERE playlist_id=${playlistId} AND video_id IN (${videoIds.join(", ")})`, null, function(error) {
+				if (error) {
+					reject()
+				} else {
+					resolve()
+					console.log(`Deleted ${this.changes} Joint-Relations of playlist ${playlistId}`)
+				}
+			})
+		})
+	}
+
 	return {
 		open: openDatabase,
 		close: closeDatabase, // never rejects
@@ -384,7 +403,7 @@ const DB = ((dbLocation) => {
 		getDeletedVideos,
 		getVideo,
 		getVideosById,
-		getVideosByUrl,
+		getVideosByUrls,
 		getVideosByPlaylist,
 		getJointRelationsOfPlaylist,
 		allPlaylists,
@@ -395,6 +414,7 @@ const DB = ((dbLocation) => {
 		setVideoDeleted,
 		removeJointRelation,
 		deleteJointRelations,
+		deleteJointRelationsOfPlaylistByVideoIds
 	}
 
 })("./dev.sqlite")

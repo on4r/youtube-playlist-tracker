@@ -1,40 +1,66 @@
 const express = require("express")
 const bodyParser = require("body-parser")
 
+const CRON = require("./cron")
 const DB = require("./database")
 const { parsePlaylistAndUpdateTables } = require("./updateDatabaseLogic")
 const { validPlaylist } = require("./parser")
-const CRON = require("./cron")
 
-const app = express()
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(express.static(__dirname + '/public'))
-app.set("view engine", "ejs")
-
-app.get("/", function(req, res) {
-	res.render("pages/home", { message: null, type: null })
-})
-
-app.post("/", async function(req, res) {
-
-	const id = req.body.playlist_id
-	const messages = {
+/*
+ * Settings and Configuration
+ */
+const APP = express()
+const PORT = process.env["YPT_APP_PORT"] || 8080
+const messages = function(data) {
+	return {
 		invalid: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
-		info: `We already indexed this playlist. You can find it <a href='/${id}'>here</a>.`,
-		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="/${id}">here</a>.`,
+		info: `We already indexed this playlist. You can find it <a href='/${data.id}'>here</a>.`,
+		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="/${data.id}">here</a>.`,
 		dberror: `Ups! Something went wrong. Please try again later.`,
 		dbupdate: `We are currently updating our database. Please try again later.`
 	}
-	let playlist = null
+}
+const restoredVideosFirst = function(a, b) {
+	return (a.title == "[Deleted]") ? 1 : -1
+}
 
+APP.set("view engine", "ejs")
+
+/*
+ * Middleware
+ */
+
+APP.use(bodyParser.urlencoded({ extended: true }))
+APP.use(express.static(__dirname + '/public'))
+APP.use(function(req, res, next) {
 	if (CRON.updateInProgress()) {
-		res.render("pages/home", { message: messages.dbupdate, type: "error" })
+		res.sendStatus(503)
 		return
+	} else {
+		next()
 	}
+})
+
+/*
+ * Routes
+ *
+ * Home: GET /
+ * Form: POST /
+ * Playlist: GET /*
+ */
+
+APP.get("/", function(req, res) {
+	res.render("pages/home", { message: null, type: null })
+})
+
+APP.post("/", async function(req, res) {
+
+	const id = req.body.playlist_id
+	let playlist = null
 
 	// check if id passed is a valid youtube playlist
 	if (!await validPlaylist(id)) {
-		res.render("pages/home", { message: messages.invalid, type: "error" })
+		res.render("pages/home", { message: messages().invalid, type: "error" })
 		return
 	}
 
@@ -44,7 +70,7 @@ app.post("/", async function(req, res) {
 
 	if (playlist) {
 
-		res.render("pages/home", { message: messages.info, type: "info" })
+		res.render("pages/home", { message: messages({id}).info, type: "info" })
 		await DB.close()
 		return
 
@@ -54,14 +80,14 @@ app.post("/", async function(req, res) {
 		try {
 
 			playlist = await DB.addPlaylist(id)
-			res.render("pages/home", { message: messages.success, type: "success" })
+			res.render("pages/home", { message: messages({id}).success, type: "success" })
 			// start the async "youtube-dl and fill database" script
 			await parsePlaylistAndUpdateTables(playlist)
 
 		} catch (e) {
 
 			console.error("Database Error in app.post('/')", e)
-			res.render("pages/home", { message: messages.dberror, type: "error" })
+			res.render("pages/home", { message: messages().dberror, type: "error" })
 			return
 
 		} finally {
@@ -72,10 +98,10 @@ app.post("/", async function(req, res) {
 
 })
 
-app.get("/*", async function(req, res) {
+APP.get("/*", async function(req, res) {
 
 	let id = req.originalUrl.substring(1)
-	let playlist = {}
+	let playlist = null
 	let videoIds = []
 	let deletedVideos = []
 	let error = null
@@ -83,8 +109,8 @@ app.get("/*", async function(req, res) {
 	gatherViewData: try {
 
 		if (!await validPlaylist(id)) {
-			res.status(400).send("Invalid playlist id")
-			return
+			error = "Invalid playlist id"
+			break gatherViewData
 		}
 
 		await DB.open()
@@ -138,15 +164,9 @@ app.get("/*", async function(req, res) {
 })
 
 
-app.listen(8080)
-console.log("server listening at 8080")
 
+APP.listen(PORT)
+console.log("APP: listening at port", PORT)
 
-// =============================================
-// HELPERS
-// =============================================
-
-function restoredVideosFirst(a, b) {
-	return (a.title == "[Deleted]") ? 1 : -1
-}
+CRON.startDailyUpdate()
 

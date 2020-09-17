@@ -1,6 +1,10 @@
 # Setup
 
-1. add `YTDL_BIN_PATH=/path/to/desired/youtube-dl` to your `.bash_profile` / `.zsh_profile`
+1. add environment variables
+    
+    YPT_APP_PORT=8080
+    YPT_YOUTUBEDL_PATH=/path/to/youtube-dl
+
 2. install packages `npm install`
 3. start server `node server.js`
 

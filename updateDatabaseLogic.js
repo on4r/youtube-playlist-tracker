@@ -53,7 +53,9 @@ async function parsePlaylistAndUpdateTables(playlist) {
 
 		// PARSE playlist
 		parsedPlaylist = await parsePlaylist(playlist.url)
-		parsedVideos = parsedPlaylist.entries
+		// reverse the video array to parse oldest videos first
+		// this enables us to order by playlists_videos id and get the videos added by "time"
+		parsedVideos = parsedPlaylist.entries.reverse()
 
 		await updatePlaylist(playlist, parsedPlaylist)
 		await createOrUpdateVideos(parsedVideos)
@@ -99,7 +101,7 @@ async function updatePlaylist(playlist, parsedPlaylist) {
 */
 async function createOrUpdateVideos(parsedVideos) {
 
-	let videos = await processChunked(DB.getVideosByUrl, parsedVideos.map(v => v.url), 40)
+	let videos = await processChunked(DB.getVideosByUrls, parsedVideos.map(v => v.url), 40)
 	let videosToCreate = []
 	let videosToUpdate = []
 	let urls = videos.map(v => v.url)
@@ -118,7 +120,10 @@ async function createOrUpdateVideos(parsedVideos) {
 		}
 	})
 
+	// create new videos
 	await processChunked(DB.addVideos, videosToCreate, 20)
+
+	// update existing videos
 	for (let id of videosToUpdate) {
 		await DB.setVideoDeleted(id)
 	}
@@ -133,7 +138,7 @@ async function createOrUpdateVideos(parsedVideos) {
 * @param	{Array}		parsedVideos
 * @return	{Promise}
 */
-async function createOrDeleteJointRelations(playlistId, parsedVideos) {
+/*async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 
 	let jointRelationsToCreate = []
 	let jointRelationsToDelete = []
@@ -170,6 +175,47 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 
 	await processChunked(DB.addJointRelations, jointRelationsToCreate, 40)
 	await processChunked(DB.deleteJointRelations, jointRelationsToDelete, 40)
+
+}*/
+
+// debug
+async function createOrDeleteJointRelations(playlistId, parsedVideos) {
+
+	let jointRelationsToDelete = []
+
+	let newVideoUrls = []
+	let removedVideoUrls = []
+
+	// currentVideoUrls(FromPlaylist)
+	let currentVideoUrls = (await DB.getVideosByPlaylist(playlistId)).map(v => v.url)
+	let latestVideoUrls = parsedVideos.map(v => v.url)
+
+	// check if there are new videos in the playlist
+	latestVideoUrls.forEach(url => {
+		if (!currentVideoUrls.includes(url))
+			newVideoUrls.push(url)
+	})
+
+	// check if video got removed from playlist (by user)
+	currentVideoUrls.forEach(url => {
+		if (!latestVideoUrls.includes(url))
+			removedVideoUrls.push(url)
+	})
+
+	// to create a NEW joint relations,
+	// the new video MUST be inserted into the database before
+	let newVideos = await DB.getVideosByUrls(newVideoUrls)
+	let jointRelationsToCreate = newVideos.map(v => {
+		return {
+			playlist_id: playlistId,
+			video_id: v.id
+		}
+	})
+	await processChunked(DB.addJointRelations, jointRelationsToCreate, 40)
+
+	// delete removed videos
+	let removedVideoIds = (await DB.getVideosByUrls(removedVideoUrls)).map(v => v.id)
+	await DB.deleteJointRelationsOfPlaylistByVideoIds(playlistId, removedVideoIds)
 
 }
 

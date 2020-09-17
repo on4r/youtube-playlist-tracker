@@ -1,5 +1,10 @@
 #!/bin/bash
-BIN_PATH=/home/on4r/code/playground/downloads/youtube-dl-test
+if [[ -z $YPT_YOUTUBEDL_PATH ]]; then
+	echo "please configure YPT_YOUTUBEDL_PATH in your environment"
+	exit 1
+fi
+
+BIN_PATH=$YPT_YOUTUBEDL_PATH
 
 LATEST_RELEASE_TAG=$(curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/youtube-dl/releases/latest/ | cut -d/ -f8)
 LATEST_RELEASE_DOWNLOADS_URL="https://github.com/ytdl-org/youtube-dl/releases/download/$LATEST_RELEASE_TAG"
