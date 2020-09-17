@@ -1,6 +1,6 @@
 <%- include("../partials/header") %>
 
-<a href="/" class="logo">YouTube Playlist Tracker</a>
+<a href="<% base_url %>" class="logo">YouTube Playlist Tracker</a>
 
 <% if (locals.playlist) { %>
 <h1><a class="no-highlight" href="https://www.youtube.com/playlist?list=<%= playlist.url %>" target="_blank"><%= playlist.title %></a></h1>
