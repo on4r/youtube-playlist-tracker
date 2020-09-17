@@ -1,12 +1,19 @@
 # Setup
 
-1. add environment variables
-    
+add environment variables
+> add trailing slash to base url
+
     YPT_APP_PORT=8080
+    YPT_APP_BASE_URL=/my/subdir/
     YPT_YOUTUBEDL_PATH=/path/to/youtube-dl
 
-2. install packages `npm install`
-3. start server `node server.js`
+install packages 
+
+    npm install
+
+start server 
+
+    node server.js
 
 ## lessons learned
 

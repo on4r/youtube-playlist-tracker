@@ -173,10 +173,8 @@ APP.use(function(req, res, next) {
 	next()
 })
 
-// set a base url for the app
-// so we can host it in a subdir
-APP.use(BASE_URL, ROUTER)
-
+// pass the router
+APP.use(ROUTER)
 
 APP.listen(PORT)
 console.log("APP: listening at port", PORT)
