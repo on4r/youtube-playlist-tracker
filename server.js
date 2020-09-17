@@ -16,8 +16,8 @@ const BASE_URL = process.env["YPT_APP_BASE_URL"] || "/"
 const messages = function({id = 0}) {
 	return {
 		invalid: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
-		info: `We already indexed this playlist. You can find it <a href='${BASE_URL}${data.id}'>here</a>.`,
-		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="${BASE_URL}${data.id}">here</a>.`,
+		info: `We already indexed this playlist. You can find it <a href='${BASE_URL}${id}'>here</a>.`,
+		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="${BASE_URL}${id}">here</a>.`,
 		dberror: `Ups! Something went wrong. Please try again later.`,
 		dbupdate: `We are currently updating our database. Please try again later.`
 	}
