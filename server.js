@@ -158,7 +158,6 @@ ROUTER.get("/*", async function(req, res) {
 APP.use(bodyParser.urlencoded({ extended: true }))
 APP.use(express.static(__dirname + '/public'))
 
-console.log(__dirname)
 // temporarily unavailable when updating database
 APP.use(function(req, res, next) {
 	if (CRON.updateInProgress()) {
@@ -179,6 +178,7 @@ APP.use(function(req, res, next) {
 APP.use(ROUTER)
 
 APP.listen(PORT)
+console.log("APP: directory", __dirname)
 console.log("APP: listening at port", PORT)
 console.log("APP: base url", BASE_URL)
 
