@@ -27,6 +27,8 @@ const restoredVideosFirst = function(a, b) {
 }
 
 APP.set("view engine", "ejs")
+APP.set("views", `${__dirname}/views`)
+DB.use(`${__dirname}/dev.sqlite`)
 
 /*
  * Routes

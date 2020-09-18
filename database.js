@@ -1,10 +1,14 @@
 // todo: add placeholder function()
-
 const sqlite3 = require('sqlite3').verbose()
 
-const DB = ((dbLocation) => {
+const DB = (() => {
 
 	let db = {}
+	let dbLocation = null
+
+	function use(pathToDB) {
+		dbLocation = pathToDB
+	}
 
 	function openDatabase() {
 		return new Promise((resolve, reject) => {
@@ -396,6 +400,7 @@ const DB = ((dbLocation) => {
 	}
 
 	return {
+		use,
 		open: openDatabase,
 		close: closeDatabase, // never rejects
 		getPlaylist,
@@ -417,6 +422,6 @@ const DB = ((dbLocation) => {
 		deleteJointRelationsOfPlaylistByVideoIds
 	}
 
-})("./dev.sqlite")
+})()
 
 module.exports = DB

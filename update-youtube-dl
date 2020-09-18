@@ -1,25 +1,39 @@
 #!/bin/bash
-if [[ -z $YPT_YOUTUBEDL_PATH ]]; then
-	echo "please configure YPT_YOUTUBEDL_PATH in your environment"
-	exit 1
+
+# get full script path so nothing breaks in case we call it from a different place
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+YOUTUBE_DL_PATH="$DIR/youtube-dl"
+
+if [[ ! -e $YOUTUBE_DL_PATH ]]; then
+	echo "youtube-dl not found"
+	echo "Downloading latest version to $YOUTUBE_DL_PATH"
+	curl -Ls "https://yt-dl.org/downloads/latest/youtube-dl" -o $YOUTUBE_DL_PATH
+	echo "Download finished. Don't forget to make the file executable!"
+	exit 0
+else
+	echo "Checking for latest version..."
 fi
 
-BIN_PATH=$YPT_YOUTUBEDL_PATH
-
+# first we get the latest release tag
 LATEST_RELEASE_TAG=$(curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/youtube-dl/releases/latest/ | cut -d/ -f8)
+# then we create the downloads url with this tag
 LATEST_RELEASE_DOWNLOADS_URL="https://github.com/ytdl-org/youtube-dl/releases/download/$LATEST_RELEASE_TAG"
+# now we pull the latest checksums
 LATEST_CHECKSUM=$(curl -Ls "$LATEST_RELEASE_DOWNLOADS_URL/MD5SUMS" | head -1 | cut -d ' ' -f1)
-CURRENT_CHECKSUM=$(md5sum $BIN_PATH | cut -d ' ' -f1)
+# calculate the old one
+CURRENT_CHECKSUM=$(md5sum $YOUTUBE_DL_PATH | cut -d ' ' -f1)
 
-echo "local: $CURRENT_CHECKSUM"
-echo "latest: $LATEST_CHECKSUM"
+echo "Checksums:"
+echo "Local: $CURRENT_CHECKSUM"
+echo "Latest: $LATEST_CHECKSUM"
 
+# and compare them
 diff <(echo $CURRENT_CHECKSUM) <(echo $LATEST_CHECKSUM)
 
 if [[ $? -eq 1 ]]; then
-	echo "checksum changed. update youtube-dl..."
-	curl -Ls "$LATEST_RELEASE_DOWNLOADS_URL/youtube-dl" -o $BIN_PATH
-	echo "downloaded latest youtube-dl binary to $BIN_PATH"
+	echo "Checksum changed. Downloading latest version to $YOUTUBE_DL_PATH"
+	curl -Ls "$LATEST_RELEASE_DOWNLOADS_URL/youtube-dl" -o $YOUTUBE_DL_PATH
+	echo "Download finished."
 else
-	echo "nothing changed. dont update youtube-dl."
+	echo "Nothing changed."
 fi
