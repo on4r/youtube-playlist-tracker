@@ -156,7 +156,7 @@ ROUTER.get("/*", async function(req, res) {
  */
 
 APP.use(bodyParser.urlencoded({ extended: true }))
-APP.use(express.static(__dirname + '/public'))
+APP.use(express.static(`${__dirname}/public`))
 
 // temporarily unavailable when updating database
 APP.use(function(req, res, next) {

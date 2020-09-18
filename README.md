@@ -4,8 +4,7 @@ add environment variables
 > add trailing slash to base url
 
     YPT_APP_PORT=8080
-    YPT_APP_BASE_URL=/my/subdir/
-    YPT_YOUTUBEDL_PATH=/path/to/youtube-dl
+    YPT_APP_BASE_URL=/some/url/path/
 
 install packages 
 
@@ -29,6 +28,8 @@ start server
   And `*` jumps to the next occurrence of whatever word is below the cursor. 
   To manipulate folds use `zO`,`zC`,`zA`,`zR`,`zM` (the last two manipulate all folds in the file)
 9. *express*: always `return` after `res.send`, `res.render`, etc. whatever... save yourself some nerves :D
+10. always make sure to call *views*, *scripts*, etc. with the **absolute** path on the system using `__dirname`.
+  Because your node app will be called from a supervisor process from a different directory. so check your *paths*.
 
 ### get latest release url from github
 

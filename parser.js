@@ -26,7 +26,7 @@ function validPlaylist(id) {
  */
 async function parsePlaylist(playlistId) {
 	return new Promise((resolve, reject) => {
-		exec(`youtube-dl --dump-single-json --flat-playlist ${playlistId}`, (error, stdout, stderr) => {
+		exec(`${__dirname}/youtube-dl --dump-single-json --flat-playlist ${playlistId}`, (error, stdout, stderr) => {
 
 			if (error && stderr) {
 				reject(stderr)

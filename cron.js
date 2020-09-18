@@ -34,7 +34,7 @@ const CRON = (() => {
 
 	async function updateYoutubeDl() {
 		return new Promise((resolve, reject) => {
-			exec("./update-youtube-dl", (error, stdout, stderr) => {
+			exec(`${__dirname}/update-youtube-dl`, (error, stdout, stderr) => {
 
 				if (error && stderr) {
 					reject(stderr)
