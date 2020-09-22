@@ -30,7 +30,7 @@ const DB = (() => {
 					if (error)
 						throw error
 					resolve(0)
-					console.log("DATBASE: closed")
+					console.log("DATABASE: closed")
 				})
 			} catch (e) {
 				resolve(0)
@@ -152,8 +152,9 @@ const DB = (() => {
 				return
 			}
 
-			// data : [{url, title, deleted}, {url, title, deleted}]
-			let values = data.map(v => `("${v.url}", "${v.title}", ${v.deleted})`).join(", ")
+			// data: [{url, title, deleted}, {url, title, deleted}]
+			// escape double quotes in video title
+			let values = data.map(v => `("${v.url}", "${v.title.replace(/"/g,'""')}", ${v.deleted})`).join(", ")
 			db.run(`INSERT INTO videos (url, title, deleted) VALUES ${values}`, [], function(error) {
 				if (error) {
 					error.fn = "addVideos"
@@ -207,7 +208,7 @@ const DB = (() => {
 					reject(error)
 				} else {
 					resolve()
-					console.log(`Updated playlist ${id} with ${data}`)
+					console.log(`Updated playlist ${id} with ${JSON.stringify(data)}`)
 				}
 			})
 		})
