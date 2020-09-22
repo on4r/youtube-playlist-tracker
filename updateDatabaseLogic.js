@@ -29,10 +29,10 @@ async function updateAllPlaylists() {
 					resolve()
 				})
 
-		} catch (e) {
+		} catch (error) {
 			console.log("Database Error in updateAllPlaylists()")
 			await DB.close()
-			reject(e)
+			reject(error)
 		}
 	})
 }
@@ -50,12 +50,8 @@ async function updateAllPlaylists() {
 async function parsePlaylistAndUpdateTables(playlist) {
 
 	try {
-
-		// PARSE playlist
 		parsedPlaylist = await parsePlaylist(playlist.url)
-		// reverse the video array to parse oldest videos first
-		// this enables us to order by playlists_videos id and get the videos added by "time"
-		parsedVideos = parsedPlaylist.entries.reverse()
+		parsedVideos = parsedPlaylist.entries
 
 		await updatePlaylist(playlist, parsedPlaylist)
 		await createOrUpdateVideos(parsedVideos)
@@ -101,7 +97,7 @@ async function updatePlaylist(playlist, parsedPlaylist) {
 */
 async function createOrUpdateVideos(parsedVideos) {
 
-	let videos = await processChunked(DB.getVideosByUrls, parsedVideos.map(v => v.url), 40)
+	let videos = await DB.getVideosByUrls( parsedVideos.map(v => v.url) )
 	let videosToCreate = []
 	let videosToUpdate = []
 	let urls = videos.map(v => v.url)
@@ -113,23 +109,35 @@ async function createOrUpdateVideos(parsedVideos) {
 				url: parsedVideo.url,
 				title: isDeleted(parsedVideo.title) ? "[Deleted]" : parsedVideo.title,
 				deleted: isDeleted(parsedVideo.title) ? 1 : 0
-			}) } else {
+			})
+		} else {
 			let video = videos.find(v => v.url === parsedVideo.url)
 			if (isDeleted(parsedVideo.title) && video.deleted == 0)
 				videosToUpdate.push(video.id)
 		}
 	})
 
-	// create new videos
-	await processChunked(DB.addVideos, videosToCreate, 20)
+	// add new videos ...
+	await DB.addVideos(videosToCreate)
 
-	// update existing videos
+	// ... and update existing ones
 	for (let id of videosToUpdate) {
-		await DB.setVideoDeleted(id)
+		await DB.updateVideo(id, {deleted: 1})
 	}
 
 }
 
+/**
+ * Compare a video title with a specific string which youtube-dl adds for parsed videos which got deleted
+ *
+ * @param	{String}	title
+ * @return	{Boolean}
+ */
+function isDeleted(title) {
+
+	return (title === "[Deleted video]") ? true : false
+
+}
 
 /**
 * Create new joint-relations or delete existing ones because videos got deleted from the playlist
@@ -138,56 +146,13 @@ async function createOrUpdateVideos(parsedVideos) {
 * @param	{Array}		parsedVideos
 * @return	{Promise}
 */
-/*async function createOrDeleteJointRelations(playlistId, parsedVideos) {
-
-	let jointRelationsToCreate = []
-	let jointRelationsToDelete = []
-
-	let videosOfPlaylist = await DB.getVideosByPlaylist(playlistId)
-	let jointRelationsOfPlaylist = await DB.getJointRelationsOfPlaylist(playlistId)
-
-	let oldUrls = videosOfPlaylist.map(video => video.url)
-	let newUrls = parsedVideos.map(video => video.url)
-	let allUrls = new Set(oldUrls.concat(newUrls))
-
-	for (let url of allUrls) {
-
-		let video = videosOfPlaylist.find(v => v.url === url)
-
-		if ( oldUrls.includes(url) && !newUrls.includes(url) ) {
-
-			let ids = jointRelationsOfPlaylist
-				.filter(({video_id}) => video_id == video.id)
-				.map(jr => jr.id)
-
-			jointRelationsToDelete.push(...ids)
-
-		} else if ( newUrls.includes(url) && !oldUrls.includes(url) ) {
-
-			jointRelationsToCreate.push({
-				playlist_id: playlistId,
-				video_id: (await DB.getVideo(url)).id
-			})
-
-		}
-
-	}
-
-	await processChunked(DB.addJointRelations, jointRelationsToCreate, 40)
-	await processChunked(DB.deleteJointRelations, jointRelationsToDelete, 40)
-
-}*/
-
-// debug
 async function createOrDeleteJointRelations(playlistId, parsedVideos) {
-
-	let jointRelationsToDelete = []
 
 	let newVideoUrls = []
 	let removedVideoUrls = []
 
 	// currentVideoUrls(FromPlaylist)
-	let currentVideoUrls = (await DB.getVideosByPlaylist(playlistId)).map(v => v.url)
+	let currentVideoUrls = (await DB.getVideosByPlaylistId(playlistId)).map(v => v.url)
 	let latestVideoUrls = parsedVideos.map(v => v.url)
 
 	// check if there are new videos in the playlist
@@ -211,72 +176,11 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 			video_id: v.id
 		}
 	})
-	await processChunked(DB.addJointRelations, jointRelationsToCreate, 40)
+	await DB.addJointRelations(jointRelationsToCreate)
 
 	// delete removed videos
 	let removedVideoIds = (await DB.getVideosByUrls(removedVideoUrls)).map(v => v.id)
 	await DB.deleteJointRelationsOfPlaylistByVideoIds(playlistId, removedVideoIds)
-
-}
-
-// =============================================
-// HELPERS
-// =============================================
-
-/**
- * Compare a video title with a specific string which youtube-dl adds for parsed videos which got deleted
- *
- * @param	{String}	title
- * @return	{Boolean}
- */
-function isDeleted(title) {
-
-	return (title === "[Deleted video]") ? true : false
-
-}
-
-/**
- * Returns an array with arrays of the given size.
- * Example: Split in group of 3 items
- * chunkArray([1,2,3,4,5,6,7,8], 3)
- * Outputs : [ [1,2,3] , [4,5,6] ,[7,8] ]
- *
- * @param myArray {Array} Array to split
- * @param chunkSize {Integer} Size of every group
- *
- */
-function chunkArray(myArray, chunk_size) {
-
-    var results = [];
-
-    while (myArray.length) {
-        results.push(myArray.splice(0, chunk_size));
-    }
-
-    return results;
-
-}
-
-/**
- * Splits array into chunks before feeding them to an async function
- * We do this because sqlite3 can only handle a limited amount of variables
- * See: SQLITE_MAX_VARIABLE_NUMBER for more infos
- * @param	{Function}	fn - The function to call
- * @param	{Array}		array - The array to pass chunked to the function
- * @param	{Number}	size - The chunk size
- * @return	{Promise}	Resolves with return of function or Rejects with error
- */
-async function processChunked(fn, array, size) {
-
-	let results = []
-
-	for ( let chunk of chunkArray(array, size) ) {
-		let tmp = await fn(chunk)
-		if (tmp && tmp.length)
-			results.push(...tmp)
-	}
-
-	return results
 
 }
 

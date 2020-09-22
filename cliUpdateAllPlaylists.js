@@ -1,3 +1,9 @@
-const { updateAllPlaylists } = require('./updateDatabaseLogic')
+const { updateAllPlaylists } = require("./updateDatabaseLogic");
+const DB = require("./database");
 
-updateAllPlaylists()
+(async function() {
+
+	DB.init(`${__dirname}/dev.sqlite`)
+	await updateAllPlaylists()
+
+})()

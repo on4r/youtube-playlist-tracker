@@ -5,11 +5,18 @@ const CronJob = require("cron").CronJob
 const CRON = (() => {
 
 	let _updateInProgress = false
-	const dailyUpdateJob = new CronJob("0 0 */1 * * *", updateHandler, null)
+	const dailyUpdateJob = new CronJob("0 0 0 */1 * *", updateHandler, null)
+	const hourlyUpdateJob = new CronJob("0 0 */1 * * *", updateHandler, null)
+	const minutelyUpdateJob = new CronJob("0 */1 * * * *", updateHandler, null)
 
-	function startDailyUpdate() {
+	function initDailyUpdate() {
 		dailyUpdateJob.start()
-		console.log("CRON: started daily update job")
+		console.log("CRON: initialized [dailyUpdateJob]")
+	}
+
+	function initHourlyUpdate() {
+		hourlyUpdateJob.start()
+		console.log("CRON: initialized [hourlyUpdateJob]")
 	}
 
 	async function updateHandler() {
@@ -58,7 +65,8 @@ const CRON = (() => {
 
 	return {
 		updateInProgress,
-		startDailyUpdate
+		initDailyUpdate,
+		initHourlyUpdate
 	}
 
 })()

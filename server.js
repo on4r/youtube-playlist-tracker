@@ -22,13 +22,16 @@ const messages = function({id} = {}) {
 		dbupdate: `We are currently updating our database. Please try again later.`
 	}
 }
+
 const restoredVideosFirst = function(a, b) {
+	// this check depends on what we set as title for deleted video
+	// see updateDatabaseLogic.js:CreateOrUpdateVidoes() function
 	return (a.title == "[Deleted]") ? 1 : -1
 }
 
 APP.set("view engine", "ejs")
 APP.set("views", `${__dirname}/views`)
-DB.use(`${__dirname}/dev.sqlite`)
+DB.init(`${__dirname}/dev.sqlite`)
 
 /*
  * Routes
@@ -54,7 +57,7 @@ ROUTER.post("/", async function(req, res) {
 
 	// check if playlist is already indexed
 	await DB.open()
-	playlist = await DB.getPlaylist(id)
+	playlist = await DB.getPlaylistByUrl(id)
 
 	if (playlist) {
 
@@ -103,20 +106,20 @@ ROUTER.get("/*", async function(req, res) {
 
 		await DB.open()
 
-		playlist = await DB.getPlaylist(id)
+		playlist = await DB.getPlaylistByUrl(id)
 		if (!playlist) {
 			error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
 			break gatherViewData
 		}
 
 		// await playlistInProcess(playlist.id)
-		videoIds = await DB.getVideoIdsOfPlaylist(playlist.id)
+		videos = await DB.getVideosByPlaylistId(playlist.id)
 		if (!videoIds.length) {
 			error = "This playlist is empty."
 			break gatherViewData
 		}
 
-		deletedVideos = await DB.getDeletedVideos(videoIds)
+		deletedVideos = await DB.getDeletedVideosByIds(videoIds)
 		if (!deletedVideos.length) {
 			error = "This playlist contains no deleted videos!"
 			break gatherViewData
@@ -168,19 +171,19 @@ APP.use(function(req, res, next) {
 	}
 })
 
-// pass base_url to templates
+// always pass base_url to templates
 APP.use(function(req, res, next) {
 	res.locals.base_url = BASE_URL
 	next()
 })
 
-// pass the router
+// init app with router
 APP.use(ROUTER)
 
 APP.listen(PORT)
-console.log("APP: directory", __dirname)
-console.log("APP: listening at port", PORT)
-console.log("APP: base url", BASE_URL)
+console.log(`APP: directory [${__dirname}]`)
+console.log(`APP: listening at port [${PORT}]`)
+console.log(`APP: base url [${BASE_URL}]`)
 
-CRON.startDailyUpdate()
+CRON.initHourlyUpdate()
 
