@@ -91,6 +91,69 @@ ROUTER.post("/", async function(req, res) {
 
 })
 
+ROUTER.post("/:id/update", async function(req, res) {
+	res.send(JSON.stringify(req.body))
+})
+
+ROUTER.get("/:id/update", async function(req, res) {
+
+	const id = req.params.id
+	let error = null
+	let playlist = null
+	let videos = []
+	let deletedVideos = []
+	let title = HEAD.title
+
+	gatherViewData: try {
+
+		if (!await validPlaylist(id)) {
+			error = "Invalid playlist id"
+			break gatherViewData
+		}
+
+		await DB.open()
+
+		playlist = await DB.getPlaylistByUrl(id)
+		if (!playlist) {
+			error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
+			break gatherViewData
+		} else {
+			title = `${playlist.title} by ${playlist.uploader_id} | ${title}`
+		}
+
+		// await playlistInProcess(playlist.id)
+		videos = await DB.getVideosByPlaylistId(playlist.id)
+		if (!videos.length) {
+			error = "This playlist is empty."
+			break gatherViewData
+		}
+
+		deletedVideos = await DB.getDeletedVideosByIds(videos.map(v => v.id))
+		if (!deletedVideos.length) {
+			error = "This playlist contains no deleted videos!"
+			break gatherViewData
+		} else {
+			// for research mode, we are only interested in videos which are gone forever
+			deletedVideos = deletedVideos.filter(video => video.title == "[Deleted]")
+		}
+
+	} catch (error) {
+
+		res.status(500).send("Something went wrong. Try again later.")
+		return
+
+	} finally {
+		await DB.close()
+	}
+
+	res.render("pages/playlist_update", {
+		error,
+		deletedVideos,
+		playlist
+	})
+
+})
+
 ROUTER.get("/*", async function(req, res) {
 
 	let id = req.url.substring(1)

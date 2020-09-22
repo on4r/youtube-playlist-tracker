@@ -17,8 +17,42 @@ form {
 	margin-top: 1rem;
 }
 
-input, button {
+input, button, label {
+	appearance: none;
+	-moz-appearance: none;
+	-webkit-appearance: none;
 	font-family: monospace;
+    padding: 5px 10px;
+    line-height: 15px;
+    outline: none;
+}
+
+input {
+	border: 1px solid darkgrey;
+}
+
+input:focus {
+	border-color: grey;
+}
+
+button.track {
+	border: 1px solid crimson;
+	background-color: orangered;
+	color: white;
+	position: relative;
+}
+
+button.track:hover {
+	font-weight: bold;
+}
+
+button.track:focus {
+	top: 1px;
+}
+
+label {
+    background-color: black;
+    color: white;
 }
 
 form button {

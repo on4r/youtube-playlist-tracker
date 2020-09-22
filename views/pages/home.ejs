@@ -5,8 +5,9 @@
 If a video gets deleted, you'll be able to check its title here.</p>
 <pre>PLKBVIiQPPtyi_6r4buI4ZsiW39eBsjjXl</pre>
 <form action="<%= base_url %>" method="post">
-	<input type="text" placeholder="YouTube Playlist ID" name="playlist_id" required pattern="[\w-]+" maxlength="50">
-	<button type="submit">Track</button>
+	<label for="playlist_id">Playlist</label>
+	<input name="playlist_id" type="text" placeholder="YouTube Playlist ID" pattern="[\w-]+" maxlength="50" required>
+	<button class="track">Track</button>
 </form>
 
 <% if(message && type) { %>

@@ -1,0 +1,25 @@
+<%- include("../partials/header") %>
+
+<div id="forms">
+<% deletedVideos.forEach(function(video) { %>
+<form action="<%= base_url %>/video/<%= video.id %>/update" method="post">
+	<fieldset>
+		<legend><%= video.url %></legend>
+		<label for="user_title"></label>
+		<input name="user_title" type="text" placeholder="<%= video.user_title || video.title %>">
+		<a class="search-link" href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
+		<button>update</button>
+	</fieldset>
+</form>
+<% }) %>
+</div>
+
+<script>
+document.body.addEventListener("submit", function(event) {
+	let action = event.target.action
+	let value = event.target[1].value
+//	event.preventDefault()
+})
+</script>
+
+<%- include ("../partials/footer") %>
