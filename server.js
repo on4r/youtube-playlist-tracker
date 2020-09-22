@@ -22,11 +22,13 @@ const messages = function({id} = {}) {
 		dbupdate: `We are currently updating our database. Please try again later.`
 	}
 }
-
 const restoredVideosFirst = function(a, b) {
 	// this check depends on what we set as title for deleted video
 	// see updateDatabaseLogic.js:CreateOrUpdateVidoes() function
 	return (a.title == "[Deleted]") ? 1 : -1
+}
+const HEAD = {
+	title: "YouTube Playlist Tracker"
 }
 
 APP.set("view engine", "ejs")
@@ -93,9 +95,10 @@ ROUTER.get("/*", async function(req, res) {
 
 	let id = req.url.substring(1)
 	let playlist = null
-	let videoIds = []
+	let videos = []
 	let deletedVideos = []
 	let error = null
+	let title = HEAD.title
 
 	gatherViewData: try {
 
@@ -110,6 +113,8 @@ ROUTER.get("/*", async function(req, res) {
 		if (!playlist) {
 			error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
 			break gatherViewData
+		} else {
+			title = `${playlist.title} by ${playlist.uploader_id} | ${title}`
 		}
 
 		// await playlistInProcess(playlist.id)
@@ -143,11 +148,12 @@ ROUTER.get("/*", async function(req, res) {
 
 	// prepare the viewData object
 	let viewData = {
+		error,
+		title,
 		playlist,
 		videos,
 		deletedVideos,
-		error,
-		deletedPercentage: ((deletedVideos.length / videos.length) * 100).toFixed(1)
+		deletedPercentage: ((deletedVideos.length / videos.length) * 100).toFixed(1),
 	}
 
 	res.render("pages/playlist", viewData)
@@ -171,9 +177,10 @@ APP.use(function(req, res, next) {
 	}
 })
 
-// always pass base_url to templates
+// pass global variables to templates
 APP.use(function(req, res, next) {
 	res.locals.base_url = BASE_URL
+	res.locals.title = HEAD.title
 	next()
 })
 
