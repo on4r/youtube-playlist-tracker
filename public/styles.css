@@ -49,8 +49,14 @@ a {
 
 ul {
 	display: inline-block;
-	padding-left: 0.5rem;
-	list-style: disclosure-closed;
+	padding-left: 0;
+	list-style: none;
+	max-width: 30%;
+	min-width: 300px;
+}
+
+li {
+	padding: 5px 0;
 }
 
 a.logo {

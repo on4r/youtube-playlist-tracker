@@ -119,7 +119,7 @@ const DB = (() => {
 				let preparedUrls = urls.map(u => `"${u}"`).join(", ")
 				db.all(`SELECT * FROM videos WHERE url IN (${preparedUrls})`, [], function(error, videos) {
 					if (error) {
-						error.fn = "getVideosByPlaylistId"
+						error.fn = "getVideosByUrls"
 						reject(error)
 					} else {
 						resolve(videos)

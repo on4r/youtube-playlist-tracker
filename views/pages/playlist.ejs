@@ -10,7 +10,7 @@
 <% if (locals.error) { %>
 	<p class="error"><%- error %></p>
 <% } else { %>
-<p><span class="error"><%= deletedVideos.length %></span> / <%= videoIds.length %> (<%= deletedPercentage %>%)</p>
+<p>Deleted Videos: <span class="error"><%= deletedVideos.length %></span> / <%= videos.length %> (<%= deletedPercentage %>%)</p>
 <ul>
 	<% deletedVideos.forEach(function(video) { %>
 		<li>

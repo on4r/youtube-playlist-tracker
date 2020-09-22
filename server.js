@@ -114,12 +114,12 @@ ROUTER.get("/*", async function(req, res) {
 
 		// await playlistInProcess(playlist.id)
 		videos = await DB.getVideosByPlaylistId(playlist.id)
-		if (!videoIds.length) {
+		if (!videos.length) {
 			error = "This playlist is empty."
 			break gatherViewData
 		}
 
-		deletedVideos = await DB.getDeletedVideosByIds(videoIds)
+		deletedVideos = await DB.getDeletedVideosByIds(videos.map(v => v.id))
 		if (!deletedVideos.length) {
 			error = "This playlist contains no deleted videos!"
 			break gatherViewData
@@ -144,10 +144,10 @@ ROUTER.get("/*", async function(req, res) {
 	// prepare the viewData object
 	let viewData = {
 		playlist,
-		videoIds,
+		videos,
 		deletedVideos,
 		error,
-		deletedPercentage: ((deletedVideos.length / videoIds.length) * 100).toFixed(1)
+		deletedPercentage: ((deletedVideos.length / videos.length) * 100).toFixed(1)
 	}
 
 	res.render("pages/playlist", viewData)
