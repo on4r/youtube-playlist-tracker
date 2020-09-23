@@ -32,6 +32,9 @@ const restoredVideosFirst = function(a, b) {
 }
 const stripQueryParams = function(string) {
 	let index = string.indexOf("?")
+	// if no query params return string
+	if (index < 0)
+		return string
 	return string.slice(0, index)
 }
 
@@ -184,6 +187,7 @@ ROUTER.get("/:id", async function(req, res) {
 	let videos = []
 	let deletedVideos = []
 	let restoredVideos = []
+	let restoredByUserVideos = []
 	let error = null
 	let title = HEAD.title
 
