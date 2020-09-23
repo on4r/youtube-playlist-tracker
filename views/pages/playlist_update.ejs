@@ -1,14 +1,17 @@
 <%- include("../partials/header") %>
 
+<%- include("../partials/navigation") %>
+<%- include("../partials/playlist-info") %>
+<a href="./<%= playlist.url %>">back</a>
+
 <div id="forms">
 <% deletedVideos.forEach(function(video) { %>
-<form action="<%= base_url %>/video/<%= video.id %>/update" method="post">
+<form action="./videos/<%= video.id %>/update" method="post">
 	<fieldset>
-		<legend><%= video.url %></legend>
-		<label for="user_title"></label>
-		<input name="user_title" type="text" placeholder="<%= video.user_title || video.title %>">
-		<a class="search-link" href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
+		<label for="user_title">user title</label>
+		<input name="user_title" type="text" value="<%= video.user_title %>" placeholder="<%= video.url %>" <% if (updated == video.id) {%>class="success"<%}%>>
 		<button>update</button>
+		<a class="search-link" href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
 	</fieldset>
 </form>
 <% }) %>

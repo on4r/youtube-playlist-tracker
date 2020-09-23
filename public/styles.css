@@ -1,6 +1,6 @@
 body {
 	text-align: center;
-	background-color: azure;
+	background-color: floralwhite;
 	font-family: sans-serif;
 }
 
@@ -35,27 +35,37 @@ input:focus {
 	border-color: grey;
 }
 
+button {
+	border-width: 1px;
+}
+
+input[name="playlist_id"] {
+	border-left: 0;
+}
+
+button.track:hover {
+	background-color: red;
+}
+
 button.track {
-	border: 1px solid crimson;
+	border: 1px solid red;
 	background-color: orangered;
 	color: white;
 	position: relative;
 }
 
-button.track:hover {
-	font-weight: bold;
-}
-
 button.track:focus {
-	top: 1px;
+	left: 2px;
 }
 
 label {
     background-color: black;
     color: white;
+	border: 1px solid;
 }
 
-form button {
+form button,
+a.search-link {
 	margin-left: 0.5rem;
 }
 
@@ -71,9 +81,14 @@ form button {
 	color: dodgerblue;
 }
 
+.danger {
+	color: darkorange;
+}
+
 .success a,
 .error a,
-.info a {
+.info a,
+.danger a {
 	color: black;
 }
 
@@ -110,4 +125,11 @@ a.search-link:visited {
 
 a.no-highlight {
 	color: initial;
+}
+
+fieldset {
+	border-color: darkgrey;
+	border-width: 1px;
+	border-style: dashed;
+	padding: 1rem;
 }

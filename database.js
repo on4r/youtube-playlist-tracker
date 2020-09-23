@@ -98,7 +98,7 @@ const DB = (() => {
 			if (!ids.length) {
 				resolve([])
 			} else {
-				db.all(`SELECT id, title, url FROM videos WHERE id IN (${ids.join(", ")}) AND deleted = 1`, [], function(error, deletedVideos) {
+				db.all(`SELECT * FROM videos WHERE id IN (${ids.join(", ")}) AND deleted = 1`, [], function(error, deletedVideos) {
 					if (error) {
 						error.fn = "getDeletedVideosByIds"
 						reject(error)
@@ -233,7 +233,7 @@ const DB = (() => {
 					reject(error)
 				} else {
 					resolve()
-					console.log(`Updated video ${id} with ${data}`)
+					console.log(`Updated video ${id} with ${JSON.stringify(data)}`)
 				}
 			})
 		})

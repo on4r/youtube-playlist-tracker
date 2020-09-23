@@ -1,0 +1,4 @@
+<% if (locals.playlist) { %>
+<h1><a class="no-highlight" href="https://www.youtube.com/playlist?list=<%= playlist.url %>" target="_blank"><%= playlist.title %></a></h1>
+<p class="subtitle">by <a class="no-highlight" href="https://www.youtube.com/user/<%= playlist.uploader_id %>" target="_blank"><%= playlist.uploader_id %></a></p>
+<% } %>

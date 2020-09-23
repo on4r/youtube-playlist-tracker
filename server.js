@@ -13,11 +13,14 @@ const APP = express()
 const ROUTER = express.Router()
 const PORT = process.env["YPT_APP_PORT"] || 8080
 const BASE_URL = process.env["YPT_APP_BASE_URL"] || "/"
+const HEAD = {
+	title: "YouTube Playlist Tracker"
+}
 const messages = function({id} = {}) {
 	return {
 		invalid: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
-		info: `We already indexed this playlist. You can find it <a href='${BASE_URL}${id}'>here</a>.`,
-		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="${BASE_URL}${id}">here</a>.`,
+		info: `We already indexed this playlist. You can find it <a href='./${id}'>here</a>.`,
+		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a href="./${id}">here</a>.`,
 		dberror: `Ups! Something went wrong. Please try again later.`,
 		dbupdate: `We are currently updating our database. Please try again later.`
 	}
@@ -25,10 +28,11 @@ const messages = function({id} = {}) {
 const restoredVideosFirst = function(a, b) {
 	// this check depends on what we set as title for deleted video
 	// see updateDatabaseLogic.js:CreateOrUpdateVidoes() function
-	return (a.title == "[Deleted]") ? 1 : -1
+	return (a.user_title) ? 1 : -1
 }
-const HEAD = {
-	title: "YouTube Playlist Tracker"
+const stripQueryParams = function(string) {
+	let index = string.indexOf("?")
+	return string.slice(0, index)
 }
 
 APP.set("view engine", "ejs")
@@ -91,13 +95,31 @@ ROUTER.post("/", async function(req, res) {
 
 })
 
-ROUTER.post("/:id/update", async function(req, res) {
-	res.send(JSON.stringify(req.body))
+ROUTER.post("/videos/:id/update", async function(req, res) {
+
+	const video_id = req.params.id
+	const user_title = req.body.user_title
+
+	// validate user_title (serialize, escape, w/e)
+
+	try {
+		await DB.open()
+		await DB.updateVideo(video_id, {user_title})
+	} catch (error) {
+		console.log("hola error!:",error)
+	} finally {
+		await DB.close()
+	}
+
+	res.redirect(`${stripQueryParams(req.headers.referer)}?updated=${video_id}`)
+	return
+
 })
 
-ROUTER.get("/:id/update", async function(req, res) {
+ROUTER.get("/:id/research", async function(req, res) {
 
 	const id = req.params.id
+	const updated = req.query.updated
 	let error = null
 	let playlist = null
 	let videos = []
@@ -149,17 +171,19 @@ ROUTER.get("/:id/update", async function(req, res) {
 	res.render("pages/playlist_update", {
 		error,
 		deletedVideos,
-		playlist
+		playlist,
+		updated
 	})
 
 })
 
-ROUTER.get("/*", async function(req, res) {
+ROUTER.get("/:id", async function(req, res) {
 
-	let id = req.url.substring(1)
+	const id = req.params.id
 	let playlist = null
 	let videos = []
 	let deletedVideos = []
+	let restoredVideos = []
 	let error = null
 	let title = HEAD.title
 
@@ -191,6 +215,10 @@ ROUTER.get("/*", async function(req, res) {
 		if (!deletedVideos.length) {
 			error = "This playlist contains no deleted videos!"
 			break gatherViewData
+		} else {
+			// we are only interested in videos which we were able to restore
+			restoredVideos = deletedVideos.filter(v => v.title != "[Deleted]")
+			restoredByUserVideos = deletedVideos.filter(v => v.user_title)
 		}
 
 	} catch (error) {
@@ -204,11 +232,6 @@ ROUTER.get("/*", async function(req, res) {
 
 	// from here on we only need to format/fill a few variables
 	// which are used in our view (playlist.ejs)
-
-	// sort restored videos on top
-	if (deletedVideos.length)
-		deletedVideos.sort(restoredVideosFirst)
-
 	// prepare the viewData object
 	let viewData = {
 		error,
@@ -216,7 +239,8 @@ ROUTER.get("/*", async function(req, res) {
 		playlist,
 		videos,
 		deletedVideos,
-		deletedPercentage: ((deletedVideos.length / videos.length) * 100).toFixed(1),
+		restoredVideos,
+		restoredByUserVideos
 	}
 
 	res.render("pages/playlist", viewData)

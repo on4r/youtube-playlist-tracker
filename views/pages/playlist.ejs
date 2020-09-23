@@ -1,26 +1,22 @@
 <%- include("../partials/header") %>
 
-<a href="<%= base_url %>" class="logo">YouTube Playlist Tracker</a>
-
-<% if (locals.playlist) { %>
-<h1><a class="no-highlight" href="https://www.youtube.com/playlist?list=<%= playlist.url %>" target="_blank"><%= playlist.title %></a></h1>
-<p class="subtitle">by <a class="no-highlight" href="https://www.youtube.com/user/<%= playlist.uploader_id %>" target="_blank"><%= playlist.uploader_id %></a></p>
-<% } %>
+<%- include("../partials/navigation") %>
+<%- include("../partials/playlist-info") %>
 
 <% if (locals.error) { %>
 	<p class="error"><%- error %></p>
 <% } else { %>
-<p>Deleted Videos: <span class="error"><%= deletedVideos.length %></span> / <%= videos.length %> (<%= deletedPercentage %>%)</p>
+<p>Restored videos:<br>
+<span class="success"><%= restoredVideos.length %></span> / <span class="danger"><%= restoredByUserVideos.length %></span> / <a class="error" href="./<%= playlist.url %>/research"><%= deletedVideos.length %></a><br>
+<small>by system / by user /  deleted</small>
+</p>
+
 <ul>
-	<% deletedVideos.forEach(function(video) { %>
-		<li>
-		<% if (video.title == "[Deleted]") { %>
-			<span contenteditable="true"><%= video.title %></span>
-			<a class="search-link" href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
-		<% } else { %>
-			<span class="error"><%= video.title %></span>
-		<% } %>
-		</li>
+	<% restoredVideos.forEach(function(video) { %>
+		<li><span class="success"><%= video.title %></span></li>
+	<% }) %>
+	<% restoredByUserVideos.forEach(function(video) { %>
+		<li><span class="danger"><%= video.user_title %></span></li>
 	<% }) %>
 </ul>
 <% } %>
