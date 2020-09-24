@@ -90,155 +90,155 @@ ROUTER.post("/videos/:id/update", async function(req, res) {
 })
 
 // research playlist
-ROUTER.get("/:url/research", async function(req, res) {
+ROUTER.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
 
-	const id = req.params.url
-	const updated = req.query.updated
-	let error = null
-	let playlist = null
-	let videos = []
-	let deletedVideos = []
-	let page_title = ""
+	// first: close the DB (maybe it was used)
+	await DB.close()
 
-	gatherViewData: try {
-
-		if (!await validPlaylist(id)) {
-			error = "Invalid playlist id"
-			break gatherViewData
-		}
-
-		if (InProgress.playlist(id)) {
-			error = "Playlist getting updated. Check back in a few minutes."
-			break gatherViewData
-		}
-
-		await DB.open()
-
-		playlist = await DB.getPlaylistByUrl(id)
-		if (!playlist) {
-			error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
-			break gatherViewData
-		}
-
-		if (playlist.title && playlist.uploader_id) {
-			page_title = `${playlist.title} by ${playlist.uploader_id} - Research Mode`
-		}
-
-		// await playlistInProcess(playlist.id)
-		videos = await DB.getVideosByPlaylistId(playlist.id)
-		if (!videos.length) {
-			error = "This playlist is empty."
-			break gatherViewData
-		}
-
-		deletedVideos = await DB.getDeletedVideosByIds(videos.map(v => v.id))
-		if (!deletedVideos.length) {
-			error = "This playlist contains no deleted videos!"
-			break gatherViewData
-		} else {
-			// for research mode, we are only interested in videos which are gone forever
-			deletedVideos = deletedVideos.filter(video => video.title == "[Deleted]")
-		}
-
-	} catch (error) {
-
-		console.log(error)
-		res.status(500).send("Something went wrong. Try again later.")
+	// was there an error on the way?
+	if (res.locals.error) {
+		res.render("pages/playlist_update")
 		return
-
-	} finally {
-		await DB.close()
 	}
 
-	res.render("pages/playlist_update", {
-		error,
-		deletedVideos,
-		playlist,
-		updated,
-		page_title
-	})
+	// no. now we filter out the videos we want to research. (the ones which the system couldnt recover)
+	res.locals.deletedVideos = res.locals.deletedVideos.filter(video => video.title == "[Deleted]")
+
+	// add info about which video got updated
+	res.locals.updated = req.query.updated
+
+	// and render the template
+	res.render("pages/playlist_update")
 
 })
 
 // show playlist
-ROUTER.get("/:url", async function(req, res) {
+ROUTER.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
 
-	const id = req.params.url
-	let playlist = null
-	let videos = []
-	let deletedVideos = []
-	let restoredVideos = []
-	let restoredByUserVideos = []
-	let error = null
-	let page_title = ""
+	// first: close the DB (maybe it was used)
+	await DB.close()
 
-	gatherViewData: try {
-
-		if (!await validPlaylist(id)) {
-			error = "Invalid playlist id"
-			break gatherViewData
-		}
-
-		if (InProgress.playlist(id)) {
-			error = "Playlist getting updated. Check back in a few minutes."
-			break gatherViewData
-		}
-
-		await DB.open()
-
-		playlist = await DB.getPlaylistByUrl(id)
-		if (!playlist) {
-			error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
-			break gatherViewData
-		}
-
-		if (playlist.title && playlist.uploader_id) {
-			page_title = `${playlist.title} by ${playlist.uploader_id}`
-		}
-
-		// await playlistInProcess(playlist.id)
-		videos = await DB.getVideosByPlaylistId(playlist.id)
-		if (!videos.length) {
-			error = "This playlist is empty."
-			break gatherViewData
-		}
-
-		deletedVideos = await DB.getDeletedVideosByIds(videos.map(v => v.id))
-		if (!deletedVideos.length) {
-			error = "This playlist contains no deleted videos!"
-			break gatherViewData
-		} else {
-			// we are only interested in videos which we were able to restore
-			restoredVideos = deletedVideos.filter(v => v.title != "[Deleted]")
-			restoredByUserVideos = deletedVideos.filter(v => v.user_title)
-		}
-
-	} catch (error) {
-
-		console.log(error)
-		res.status(500).send("Something went wrong. Try again later.")
+	// was there an error on the way?
+	if (res.locals.error) {
+		res.render("pages/playlist")
 		return
-
-	} finally {
-		await DB.close()
 	}
 
-	// from here on we only need to format/fill a few variables
-	// which are used in our view (playlist.ejs)
-	// prepare the viewData object
-	let viewData = {
-		error,
-		page_title,
-		playlist,
-		videos,
-		deletedVideos,
-		restoredVideos,
-		restoredByUserVideos
-	}
+	// filter out restored videos
+	res.locals.restoredVideos = res.locals.deletedVideos.filter(v => v.title != "[Deleted]")
 
-	res.render("pages/playlist", viewData)
+	// and the ones which got a user_title
+	res.locals.restoredByUserVideos = res.locals.deletedVideos.filter(v => v.user_title)
+
+	// render the template
+	res.render("pages/playlist")
 
 })
+
+/*
+ * Middleware for /playlists
+ */
+
+async function validatePlaylist(req, res, next) {
+
+	if (!await validPlaylist(req.params.url)) {
+		res.locals.error = "Invalid playlist id."
+	}
+
+	next()
+
+}
+
+async function checkProgress(req, res, next) {
+
+	if (res.locals.error) {
+		next()
+		return
+	}
+
+	if (InProgress.playlist(req.params.url)) {
+		res.locals.error = "Playlist getting updated. Check back in a few minutes."
+
+	}
+
+	next()
+
+}
+
+async function getPlaylist(req, res, next) {
+
+	if (res.locals.error) {
+		next()
+		return
+	}
+
+	await DB.open()
+
+	let playlist = await DB.getPlaylistByUrl(req.params.url)
+
+	if (!playlist) {
+		res.locals.error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
+	} else if (playlist.title && playlist.uploader_id) {
+		res.locals.page_title = `${playlist.title} by ${playlist.uploader_id} - Research Mode`
+	}
+
+	res.locals.playlist = playlist
+
+	next()
+
+}
+
+async function getVideos(req, res, next) {
+
+	if (res.locals.error) {
+		next()
+		return
+	}
+
+	let videos = await DB.getVideosByPlaylistId(res.locals.playlist.id)
+
+	if (!videos.length) {
+		res.locals.error = "This playlist is empty."
+	}
+
+	res.locals.videos = videos
+
+	next()
+
+}
+
+async function getDeletedVideos(req, res, next) {
+
+	if (res.locals.error) {
+		next()
+		return
+	}
+
+	let deletedVideos = await DB.getDeletedVideosByIds(res.locals.videos.map(v => v.id))
+
+	if (!deletedVideos.length) {
+		res.locals.error = "This playlist contains no deleted videos!"
+	}
+
+	res.locals.deletedVideos = deletedVideos
+
+	next()
+
+}
+
+/*
+ * The res.locals object contains now the following attributes:
+ *
+ * (error) = ""
+ * playlist = {}
+ * page_title = ""
+ * videos = []
+ * deletedVideos = []
+ */
+
+/*
+ * Helpers
+ */
 
 function messages({id} = {}) {
 	return {
