@@ -3,10 +3,15 @@
 <h1 class="logo">YouTube Playlist Tracker</h1>
 <p>Every day we make a snapshot of your playlist.<br>
 If a video gets deleted, you'll be able to check its title here.</p>
-<pre>PLKBVIiQPPtyi_6r4buI4ZsiW39eBsjjXl</pre>
+<pre>https://www.youtube.com/playlist?list=PLKBVIiQPPtyi_6r4buI4ZsiW39eBsjjXl</pre>
 <form action="./" method="post">
-	<label for="playlist_id">Playlist</label>
-	<input name="playlist_id" type="text" placeholder="YouTube Playlist ID" pattern="[\w-]+" maxlength="50" required>
+	<label for="playlist_url">Playlist</label>
+	<input name="playlist_url" type="text"
+		placeholder="YouTube Playlist URL"
+		pattern="^https:\/\/www\.youtube\.com\/playlist\?list=[A-Za-z0-9_-]+$"
+		title="https://www.youtube.com/playlist?list=XXXXX"
+		maxlength="100"
+		required>
 	<button class="track">Track</button>
 </form>
 

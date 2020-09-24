@@ -1,4 +1,5 @@
-const sqlite3 = require('sqlite3').verbose()
+const sqlite3 = require("sqlite3").verbose()
+const InProgress = require("./InProgress")
 
 const DB = (() => {
 
@@ -17,7 +18,7 @@ const DB = (() => {
 				if (error)
 					reject(error)
 				resolve(0)
-				console.log("DATABASE: opened")
+				//console.log("DATABASE: opened")
 			})
 		})
 	}
@@ -25,12 +26,18 @@ const DB = (() => {
 	function closeDatabase() {
 		return new Promise((resolve, reject) => {
 
+			// keep DB open as long as any playlist is getting updated
+			if (InProgress.any()) {
+				resolve(0)
+				return
+			}
+
 			try {
 				db.close(function(error) {
 					if (error)
 						throw error
 					resolve(0)
-					console.log("DATABASE: closed")
+					//console.log("DATABASE: closed")
 				})
 			} catch (e) {
 				resolve(0)

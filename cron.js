@@ -4,7 +4,6 @@ const CronJob = require("cron").CronJob
 
 const CRON = (() => {
 
-	let _updateInProgress = false
 	const dailyUpdateJob = new CronJob("0 0 0 */1 * *", updateHandler, null)
 	const hourlyUpdateJob = new CronJob("0 0 */1 * * *", updateHandler, null)
 	const minutelyUpdateJob = new CronJob("0 */1 * * * *", updateHandler, null)
@@ -22,7 +21,6 @@ const CRON = (() => {
 	async function updateHandler() {
 		console.log("CRON: getting to work")
 		try {
-			_updateInProgress = true
 			let response = await updateYoutubeDl()
 			console.log("CRON: update-youtube-dl says:\n", response)
 			console.log("CRON: starting to update playlists")
@@ -34,7 +32,6 @@ const CRON = (() => {
 		} catch (error) {
 			console.error("CRON: dailyUpdateJob failed with error:", error)
 		} finally {
-			_updateInProgress = false
 			console.log("CRON: getting to sleep")
 		}
 	}
@@ -54,17 +51,7 @@ const CRON = (() => {
 		})
 	}
 
-	/*
-	 * Returns info about the current update process
-	 *
-	 * @return {Boolean}
-	 */
-	function updateInProgress() {
-		return _updateInProgress
-	}
-
 	return {
-		updateInProgress,
 		initDailyUpdate,
 		initHourlyUpdate
 	}

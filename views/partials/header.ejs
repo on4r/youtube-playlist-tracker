@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<title><%= title %></title>
+		<title><%= page_title %><% if (page_title) {%> | <% } %><%= app_title %></title>
 		<base href="<%= base_url %>">
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
