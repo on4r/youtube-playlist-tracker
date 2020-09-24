@@ -10,31 +10,26 @@ const { parsePlaylist } = require("./parser")
  */
 async function updateAllPlaylists() {
 	return new Promise(async (resolve, reject) => {
+
 		try {
-			// first we open the database
+
 			await DB.open()
 
-			// get all playlists from database
 			let playlists = await DB.allPlaylists()
-			if (!playlists.length) {
-				await DB.close()
-				resolve()
-				return
-			}
 
-			// here we use map to return an array of running promises
-			allSettled(playlists.map(parsePlaylistAndUpdateTables))
-				.then(async (results) => {
-					// after all promises finished we close the database
-					await DB.close()
-					resolve()
-				})
+			for (let playlist of playlists) {
+				await parsePlaylistAndUpdateTables(playlist)
+			}
 
 		} catch (error) {
 			console.log("Database Error in updateAllPlaylists()")
-			await DB.close()
 			reject(error)
+		} finally {
+			await DB.close()
 		}
+
+		resolve()
+
 	})
 }
 
