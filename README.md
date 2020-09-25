@@ -1,4 +1,14 @@
-# Setup
+# YouTube Playlist Tracker
+> recover deleted video titles
+
+If YouTube would just show the titles of deleted videos i wouldn't had to create this app!
+
+- *sqlite* database
+- *youtube-dl* to parse playlists (no API-key needed)
+- *node* and *express* powered server
+- *ejs* frontend templates
+
+## Setup
 
 Add environment variables
 
