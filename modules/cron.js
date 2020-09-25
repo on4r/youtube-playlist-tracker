@@ -15,7 +15,7 @@ const CRON = (() => {
 	}
 
 	function initHourlyUpdate() {
-		minutelyUpdateJob.start()
+		hourlyUpdateJob.start()
 		console.log("CRON: initialized [hourlyUpdateJob]")
 	}
 
