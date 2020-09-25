@@ -2,7 +2,13 @@
 
 # get full script path so nothing breaks in case we call it from a different place
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-YOUTUBE_DL_PATH="$DIR/youtube-dl"
+
+# load into app root dir if YPT_YOUTUBE_DL_PATH is not set
+if [[ -z $YPT_YOUTUBE_DL_PATH ]]; then
+	YOUTUBE_DL_PATH="$DIR/youtube-dl"
+else
+	YOUTUBE_DL_PATH=$YPT_YOUTUBE_DL_PATH
+fi
 
 if [[ ! -e $YOUTUBE_DL_PATH ]]; then
 	echo "youtube-dl not found"
@@ -23,7 +29,7 @@ LATEST_CHECKSUM=$(curl -Ls "$LATEST_RELEASE_DOWNLOADS_URL/MD5SUMS" | head -1 | c
 # calculate the old one
 CURRENT_CHECKSUM=$(md5sum $YOUTUBE_DL_PATH | cut -d ' ' -f1)
 
-echo "Checksums:"
+echo "Checksums"
 echo "Local: $CURRENT_CHECKSUM"
 echo "Latest: $LATEST_CHECKSUM"
 

@@ -1,6 +1,7 @@
 const { updateAllPlaylists } = require("./updateDatabaseLogic")
 const { exec } = require("child_process")
 const CronJob = require("cron").CronJob
+const CONFIG = require("../config")
 
 const CRON = (() => {
 
@@ -14,7 +15,7 @@ const CRON = (() => {
 	}
 
 	function initHourlyUpdate() {
-		hourlyUpdateJob.start()
+		minutelyUpdateJob.start()
 		console.log("CRON: initialized [hourlyUpdateJob]")
 	}
 
@@ -22,7 +23,9 @@ const CRON = (() => {
 		console.log("CRON: getting to work")
 		try {
 			let response = await updateYoutubeDl()
-			console.log("CRON: update-youtube-dl says:\n", response)
+			response = response.trimEnd().replace(/^/gm, "> ")
+			console.log("CRON: update-youtube-dl says:")
+			console.log(response)
 			console.log("CRON: starting to update playlists")
 			let startTime = new Date()
 			await updateAllPlaylists()
@@ -38,7 +41,7 @@ const CRON = (() => {
 
 	async function updateYoutubeDl() {
 		return new Promise((resolve, reject) => {
-			exec(`${__dirname}/update-youtube-dl`, (error, stdout, stderr) => {
+			exec(`${CONFIG.APP_ROOT}/update-youtube-dl`, (error, stdout, stderr) => {
 
 				if (error && stderr) {
 					reject(stderr)

@@ -1,5 +1,6 @@
 const https = require("https")
 const { exec } = require("child_process")
+const CONFIG = require("../config")
 
 /**
  * Check if playlist exists on YouTube
@@ -26,7 +27,7 @@ function validPlaylist(id) {
  */
 async function parsePlaylist(playlistId) {
 	return new Promise((resolve, reject) => {
-		exec(`${__dirname}/youtube-dl --dump-single-json --flat-playlist ${playlistId}`, (error, stdout, stderr) => {
+		exec(`${CONFIG.YOUTUBE_DL_PATH} --dump-single-json --flat-playlist ${playlistId}`, (error, stdout, stderr) => {
 
 			if (error && stderr) {
 				reject(stderr)

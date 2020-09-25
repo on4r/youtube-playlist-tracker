@@ -57,10 +57,8 @@ async function parsePlaylistAndUpdateTables(playlist) {
 		await createOrDeleteJointRelations(playlist.id, parsedVideos)
 
 	} catch (error) {
-
 		console.log("There was an error while trying to update the playlist", playlist.id, playlist.url)
 		console.error(error)
-
 	} finally {
 		InProgress.removePlaylist(playlist.url)
 	}

@@ -7,8 +7,6 @@ const { validPlaylist } = require("./parser")
 const ROUTER = express.Router()
 const PLAYLIST_REGEX = /^https:\/\/www\.youtube\.com\/playlist\?list=([A-Za-z0-9_-]+)$/
 
-DB.init(`${__dirname}/dev.sqlite`)
-
 // home
 ROUTER.get("/", function(req, res) {
 	res.render("pages/home", { message: null, type: null })

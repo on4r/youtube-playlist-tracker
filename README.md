@@ -1,20 +1,22 @@
 # Setup
 
-add environment variables
-> add trailing slash to base url
+Add environment variables
 
+    YPT_APP_TITLE="App Title"
     YPT_APP_PORT=8080
-    YPT_APP_BASE_URL=/some/url/path/
+    YPT_APP_BASE_URL=/some/url/path/ # <- add trailing slash
+    YPT_YOUTUBE_DL_PATH=/path/to/youtube-dl
+    YPT_DATABASE_PATH=/path/to/db.sqlite
 
-install packages 
+Install packages 
 
     npm install
 
-start server 
+Start server 
 
     node server.js
 
-## lessons learned
+## Lessons learned
 
 1. `ls -X` sorts by filetype 
 2. *sqlite3* is limited in how many variables you can pass the query (search `SQLITE_MAX_VARIABLE_NUMBER`)
@@ -31,34 +33,37 @@ start server
 10. always make sure to call *views*, *scripts*, etc. with the **absolute** path on the system using `__dirname`.
   Because your node app will be called from a supervisor process from a different directory. so check your *paths*.
 11. **ALWAYS** use opening and closing brackets when writing `if..else`. You **will** add some lines later on and then you have to add them anyways.
-
-
-### get latest release url from github
-
-    curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/youtube-dl/releases/latest/
-    => https://github.com/ytdl-org/youtube-dl/releases/tag/2020.09.14
-
-    https://github.com/ytdl-org/youtube-dl/releases/download/2020.09.14/MD5SUMS
-    https://github.com/ytdl-org/youtube-dl/releases/download/2020.09.14/youtube-dl
-
-compare first line of *MD5SUM* (`cat MD5SUM | head -1`) with the binary
-
-## einige playlist ids
-
-    PL6cI1_8BvV-Yb9hCB_8AoFSAbF8gIyVVC
-    PLowKtXNTBypH19whXTVoG3oKSuOcw_XeW
-    PLjSy6F65_LKR-lJ8yxFDMivxdLZ3N59L4
-    OLAK5uy_nAISRtNgeSDD0moO6yOou5WbDSf7E_QrI
+12. There exists something called `N-API` which serves as an interface for low level programms written in `C/C++`. [Read more](!https://medium.com/jspoint/a-simple-guide-to-load-c-c-code-into-node-js-javascript-applications-3fcccf54fd32)
 
 ## youtube-dl
-
-### playlist format(s)
-
-    https://www.youtube.com/playlist?list=<playlist_id>
 
 ### parse playlist and dump json to file
 
     youtube-dl --dump-single-json --flat-playlist <playlist_id> > playlist.json
+
+playlist.json
+
+    {
+        "_type": "playlist",
+        "entries": [
+            {"_type": "url", "url": "uv98Gf_HHRQ", "ie_key": "Youtube", "id": "uv98Gf_HHRQ", "title": "Sokrates - Ahnherr der Philosophen"},
+            {"_type": "url", "url": "v4KJt3LgaOg", "ie_key": "Youtube", "id": "v4KJt3LgaOg", "title": "Seneca - Das Leben ist kurz"},
+            {"_type": "url", "url": "ltty-_xLMwE", "ie_key": "Youtube", "id": "ltty-_xLMwE", "title": "Platon   Ein Gastmahl der Liebe"},
+            {"_type": "url", "url": "9qar-dVOUNE", "ie_key": "Youtube", "id": "9qar-dVOUNE", "title": "Hypatia - Eine au\u00dfergew\u00f6hnliche Philosophin"},
+            {"_type": "url", "url": "oKVCFrt-TY4", "ie_key": "Youtube", "id": "oKVCFrt-TY4", "title": "Heraklit - Das Weltbild des antiken Denkers"},
+            {"_type": "url", "url": "nDQ_L0RmYaw", "ie_key": "Youtube", "id": "nDQ_L0RmYaw", "title": "Diogenes   Lebensphilosoph und Provokateur"},
+            {"_type": "url", "url": "JAjTXKMGXpE", "ie_key": "Youtube", "id": "JAjTXKMGXpE", "title": "Zenophon - Die Lebenskunst der Stoa"}
+        ],
+        "id": "PL6cI1_8BvV-Yb9hCB_8AoFSAbF8gIyVVC",
+        "title": "Philosophie der Antike",
+        "uploader": "Philosophie",
+        "uploader_id": "UCt4EMbT6U53314MvMRUpFnw",
+        "uploader_url": "https://www.youtube.com/channel/UCt4EMbT6U53314MvMRUpFnw",
+        "extractor": "youtube:playlist",
+        "webpage_url": "PL6cI1_8BvV-Yb9hCB_8AoFSAbF8gIyVVC",
+        "webpage_url_basename": "PL6cI1_8BvV-Yb9hCB_8AoFSAbF8gIyVVC",
+        "extractor_key": "YoutubePlaylist"
+    }
 
 ### errors
 
