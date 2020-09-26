@@ -43,7 +43,7 @@ Start server
 10. always make sure to call *views*, *scripts*, etc. with the **absolute** path on the system using `__dirname`.
   Because your node app will be called from a supervisor process from a different directory. so check your *paths*.
 11. **ALWAYS** use opening and closing brackets when writing `if..else`. You **will** add some lines later on and then you have to add them anyways.
-12. There exists something called `N-API` which serves as an interface for low level programms written in `C/C++`. [Read more](!https://medium.com/jspoint/a-simple-guide-to-load-c-c-code-into-node-js-javascript-applications-3fcccf54fd32)
+12. There exists something called `N-API` which serves as an interface for low level programms written in `C/C++`. [Read more](https://medium.com/jspoint/a-simple-guide-to-load-c-c-code-into-node-js-javascript-applications-3fcccf54fd32)
 
 ## youtube-dl
 
