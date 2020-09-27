@@ -22,6 +22,10 @@ Install packages
 
     npm install
 
+Rename `empty.sqlite`. Default for development is `dev.sqlite`.
+
+    mv empty.sqlite <my-db-name>
+
 Start server 
 
     node server.js
