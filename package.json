@@ -4,7 +4,8 @@
   "description": "recover deleted video titles",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "updateAllPlaylists": "node cli/updateAllPlaylists",
+    "updatePlaylist": "node cli/updatePlaylist"
   },
   "keywords": ["youtube-dl", "express", "sqlite", "ejs"],
   "author": "on4r",

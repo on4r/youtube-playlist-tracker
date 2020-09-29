@@ -20,7 +20,7 @@ const CRON = (() => {
 	}
 
 	async function updateHandler() {
-		console.log("CRON: getting to work")
+		console.log("CRON: getting to work", new Date())
 		try {
 			let response = await updateYoutubeDl()
 			response = response.trimEnd().replace(/^/gm, "> ")

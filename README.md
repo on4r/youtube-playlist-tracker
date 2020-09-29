@@ -12,23 +12,28 @@ If YouTube would just show the titles of deleted videos i wouldn't had to create
 
 Add environment variables
 
-    YPT_APP_TITLE="App Title"
+    YPT_APP_TITLE="YouTube Playlist Tracker"
     YPT_APP_PORT=8080
-    YPT_APP_BASE_URL=/some/url/path/ # <- add trailing slash
-    YPT_YOUTUBE_DL_PATH=/path/to/youtube-dl
-    YPT_DATABASE_PATH=/path/to/db.sqlite
+    YPT_APP_BASE_URL=/some/url/path/ # <- add trailing slash (default: /)
+    YPT_YOUTUBE_DL_PATH=/path/to/youtube-dl (default: __dirname)
+    YPT_DATABASE_PATH=/path/to/db.sqlite (default: dev.sqlite)
 
 Install packages 
 
     npm install
 
-Rename `empty.sqlite`. Default for development is `dev.sqlite`.
+Setup database
 
-    mv empty.sqlite <my-db-name>
+    cp empty.sqlite <my-db-name>
 
 Start server 
 
     node server.js
+
+*(Optional)* Run scripts
+
+    npm run updateAllPlaylists
+    npm run updatePlaylist
 
 ## Lessons learned
 
