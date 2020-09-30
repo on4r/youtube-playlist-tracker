@@ -8,10 +8,15 @@
 <% deletedVideos.forEach(function(video) { %>
 <form action="./videos/<%= video.id %>/update" method="post">
 	<fieldset>
-		<label for="user_title">user title</label>
-		<input name="user_title" type="text" value="<%= video.user_title %>" placeholder="<%= video.url %>" <% if (updated == video.id) {%>class="success"<%}%>>
+		<a href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
+		<label>user title
+		<input
+			name="user_title"
+			type="text"
+			value="<%= video.user_title %>"
+			placeholder="<%= video.url %>"
+			<% if (updated == video.id) {%>class="success"<%}%>></label>
 		<button>update</button>
-		<a class="search-link" href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
 	</fieldset>
 </form>
 <% }) %>

@@ -1,3 +1,5 @@
+/* Layout and Base */
+
 body {
 	text-align: center;
 	background-color: floralwhite;
@@ -8,81 +10,112 @@ h1 {
 	margin-top: 3rem;
 }
 
-.logo {
+.subtitle {
+	margin-top: -1rem;
+}
+
+a {
 	font-family: monospace;
 }
 
-form {
-	display: inline-flex;
-	margin-top: 1rem;
+a:visited {
+	color: #8f8ffb;
 }
+
+a.logo {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+}
+
+a.no-highlight {
+	color: initial;
+}
+
+/* Focus */
+
+a:focus,
+input:focus,
+button:focus {
+	outline: 2px solid;
+	outline-offset: -2px;
+}
+
+a:focus {
+	outline-offset: 2px;
+}
+
+input:focus {
+	outline-color: black;
+}
+
+button:focus {
+	outline-color: darkred;
+}
+
+/* Forms and Buttons */
 
 input, button, label {
 	appearance: none;
 	-moz-appearance: none;
 	-webkit-appearance: none;
 	font-family: monospace;
-    padding: 5px 10px;
-    line-height: 15px;
-    outline: none;
-}
-
-input {
-	border: 1px solid darkgrey;
-	border-radius: 0;
-}
-
-input:focus {
-	border-color: grey;
-}
-
-button {
-	border-width: 1px;
-}
-
-input[name="playlist_id"] {
-	border-left: 0;
-}
-
-button.track:hover {
-	background-color: red;
-}
-
-button.track {
-	border: 1px solid red;
-	background-color: orangered;
-	color: white;
-	position: relative;
-}
-
-button.track:focus {
-	left: 2px;
+	outline: none;
 }
 
 label {
-    background-color: black;
-    color: white;
+	display: inline-block;
+	padding: 10px;
+	text-align: left;
+}
+
+input {
+	box-sizing: border-box;
 	border: 1px solid black;
+	width: 100%;
+	padding: 8px 10px;
+	margin-top: 5px;
 }
 
-form button,
-a.search-link {
-	margin-left: 0.5rem;
+button {
+	border: 1px solid darkred;
+	background-color: orangered;
+	color: white;
+	padding: 8px 10px;
 }
 
-.error {
+button:hover {
+	background-color: red;
+}
+
+fieldset {
+	display: inline-block;
+	border-color: darkgrey;
+	border-width: 1px;
+	border-style: dashed;
+	padding: 1rem;
+	margin: 1rem 0 0 0;
+}
+
+/* Info classes */
+
+.error,
+.error:visited {
 	color: orangered;
 }
 
-.success {
+.success,
+.success:visited {
 	color: forestgreen;
 }
 
-.info {
+.info,
+.info:visited {
 	color: dodgerblue;
 }
 
-.danger {
+.danger,
+.danger:visited {
 	color: darkorange;
 }
 
@@ -93,9 +126,7 @@ a.search-link {
 	color: black;
 }
 
-a {
-	font-family: monospace;
-}
+/* Lists */
 
 ul {
 	display: inline-block;
@@ -109,28 +140,3 @@ li {
 	padding: 5px 0;
 }
 
-a.logo {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-	color: black;
-}
-
-.subtitle {
-	margin-top: -1rem;
-}
-
-a.search-link:visited {
-	color: #8f8ffb;
-}
-
-a.no-highlight {
-	color: initial;
-}
-
-fieldset {
-	border-color: darkgrey;
-	border-width: 1px;
-	border-style: dashed;
-	padding: 1rem;
-}

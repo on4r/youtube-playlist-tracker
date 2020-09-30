@@ -95,7 +95,7 @@ ROUTER.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getV
 
 	// was there an error on the way?
 	if (res.locals.error) {
-		res.render("pages/playlist_update")
+		res.render("pages/playlist-research")
 		return
 	}
 
@@ -106,7 +106,7 @@ ROUTER.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getV
 	res.locals.updated = req.query.updated
 
 	// and render the template
-	res.render("pages/playlist_update")
+	res.render("pages/playlist-research")
 
 })
 
