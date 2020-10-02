@@ -1,7 +1,7 @@
 const DB = require("./database")
 const Status = require("./status")
 const allSettled = require("promise.allsettled")
-const { parsePlaylist } = require("./parser")
+const Parser = require("./parser")
 
 /**
  * Find all playlists in DB and pass them to the parsePlaylistAndUpdateTables() function
@@ -49,7 +49,7 @@ async function parsePlaylistAndUpdateTables(playlist) {
 
 		Status.addPlaylist(playlist.url)
 
-		parsedPlaylist = await parsePlaylist(playlist.url)
+		parsedPlaylist = await Parser.parsePlaylist(playlist.url)
 		parsedVideos = parsedPlaylist.entries
 
 		await updatePlaylist(playlist, parsedPlaylist)

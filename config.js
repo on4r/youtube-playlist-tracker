@@ -1,5 +1,5 @@
 
-const CONFIG = {
+const Config = {
 	APP_ROOT: __dirname,
 	APP_TITLE: process.env["YPT_APP_TITLE"] || "YouTube Playlist Tracker",
 	APP_PORT: process.env["YPT_APP_PORT"] || 8080,
@@ -8,4 +8,4 @@ const CONFIG = {
 	DATABASE_PATH: process.env["YPT_DATABASE_PATH"] || `${__dirname}/dev.sqlite`
 }
 
-module.exports = CONFIG
+module.exports = Config

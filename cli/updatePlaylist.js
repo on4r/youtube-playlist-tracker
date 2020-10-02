@@ -1,11 +1,11 @@
 const Controller = require("../modules/controller");
 const DB = require("../modules/database");
-const CONFIG = require("../config")
+const Config = require("../config")
 
 const update = async function(url) {
 
 	try {
-		DB.init(CONFIG.DATABASE_PATH)
+		DB.init(Config.DATABASE_PATH)
 		await DB.open()
 		let playlist = await DB.getPlaylistByUrl(url)
 		if (playlist) {

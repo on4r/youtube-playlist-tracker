@@ -2,18 +2,18 @@ const express = require("express")
 const DB = require("./database")
 const InProgress = require("./InProgress")
 const Controller = require("./controller")
-const { validPlaylist } = require("./parser")
+const Parser = require("./parser")
 
-const ROUTER = express.Router()
+const Router = express.Router()
 const PLAYLIST_REGEX = /^https:\/\/www\.youtube\.com\/playlist\?list=([A-Za-z0-9_-]+)$/
 
 // home
-ROUTER.get("/", function(req, res) {
+Router.get("/", function(req, res) {
 	res.render("pages/home", { message: null, type: null })
 })
 
 // add playlist
-ROUTER.post("/", async function(req, res) {
+Router.post("/", async function(req, res) {
 
 	const playlist_url = req.body.playlist_url
 
@@ -26,7 +26,7 @@ ROUTER.post("/", async function(req, res) {
 	const id = PLAYLIST_REGEX.exec(playlist_url)[1]
 
 	// check if id passed is a valid youtube playlist
-	if (!await validPlaylist(id)) {
+	if (!await Parser.validPlaylist(id)) {
 		res.render("pages/home", { message: messages().invalid, type: "error" })
 		return
 	}
@@ -66,7 +66,7 @@ ROUTER.post("/", async function(req, res) {
 })
 
 // update video
-ROUTER.post("/videos/:id/update", async function(req, res) {
+Router.post("/videos/:id/update", async function(req, res) {
 
 	const video_id = req.params.id
 	const user_title = req.body.user_title
@@ -88,7 +88,7 @@ ROUTER.post("/videos/:id/update", async function(req, res) {
 })
 
 // research playlist
-ROUTER.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
+Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
 
 	// first: close the DB (maybe it was used)
 	await DB.close()
@@ -111,7 +111,7 @@ ROUTER.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getV
 })
 
 // show playlist
-ROUTER.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
+Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
 
 	// first: close the DB (maybe it was used)
 	await DB.close()
@@ -139,7 +139,7 @@ ROUTER.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, ge
 
 async function validatePlaylist(req, res, next) {
 
-	if (!await validPlaylist(req.params.url)) {
+	if (!await Parser.validPlaylist(req.params.url)) {
 		res.locals.error = "Invalid playlist id."
 	}
 
@@ -260,4 +260,4 @@ function stripQueryParams(string) {
 	return string.slice(0, index)
 }
 
-module.exports = ROUTER
+module.exports = Router
