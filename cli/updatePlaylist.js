@@ -1,4 +1,4 @@
-const { parsePlaylistAndUpdateTables } = require("../modules/updateDatabaseLogic");
+const Controller = require("../modules/controller");
 const DB = require("../modules/database");
 const CONFIG = require("../config")
 
@@ -9,7 +9,7 @@ const update = async function(url) {
 		await DB.open()
 		let playlist = await DB.getPlaylistByUrl(url)
 		if (playlist) {
-			await parsePlaylistAndUpdateTables(playlist)
+			await Controller.parsePlaylistAndUpdateTables(playlist)
 		}
 	} catch (error) {
 		console.error("cliUpdatePlaylist ERROR")

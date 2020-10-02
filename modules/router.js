@@ -1,7 +1,7 @@
 const express = require("express")
 const DB = require("./database")
 const InProgress = require("./InProgress")
-const { parsePlaylistAndUpdateTables } = require("./updateDatabaseLogic")
+const Controller = require("./controller")
 const { validPlaylist } = require("./parser")
 
 const ROUTER = express.Router()
@@ -49,7 +49,7 @@ ROUTER.post("/", async function(req, res) {
 			playlist = await DB.addPlaylist(id)
 			res.render("pages/home", { message: messages({id}).success, type: "success" })
 			// start the async "youtube-dl and fill database" script
-			await parsePlaylistAndUpdateTables(playlist)
+			await Controller.parsePlaylistAndUpdateTables(playlist)
 
 		} catch (e) {
 

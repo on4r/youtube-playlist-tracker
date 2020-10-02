@@ -1,9 +1,9 @@
-const { updateAllPlaylists } = require("./updateDatabaseLogic")
 const { exec } = require("child_process")
 const CronJob = require("cron").CronJob
+const Controller = require("./controller")
 const CONFIG = require("../config")
 
-const CRON = (() => {
+const Cron = (() => {
 
 	const dailyUpdateJob = new CronJob("0 0 0 */1 * *", updateHandler, null)
 	const hourlyUpdateJob = new CronJob("0 0 */1 * * *", updateHandler, null)
@@ -28,7 +28,7 @@ const CRON = (() => {
 			console.log(response)
 			console.log("CRON: starting to update playlists")
 			let startTime = new Date()
-			await updateAllPlaylists()
+			await Controller.updateAllPlaylists()
 			let endTime = new Date()
 			console.log("CRON: finished updating playlists")
 			console.log("CRON: updated took", ((endTime-startTime)/1000), "seconds to complete")
@@ -61,4 +61,4 @@ const CRON = (() => {
 
 })()
 
-module.exports = CRON
+module.exports = Cron
