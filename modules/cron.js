@@ -1,7 +1,6 @@
-const { exec } = require("child_process")
 const CronJob = require("cron").CronJob
 const Controller = require("./controller")
-const CONFIG = require("../config")
+const YoutubeDl = require("./youtubeDl")
 
 const Cron = (() => {
 
@@ -22,7 +21,7 @@ const Cron = (() => {
 	async function updateHandler() {
 		console.log("CRON: getting to work", new Date())
 		try {
-			let response = await updateYoutubeDl()
+			let response = await YoutubeDl.updateBinary()
 			response = response.trimEnd().replace(/^/gm, "> ")
 			console.log("CRON: update-youtube-dl says:")
 			console.log(response)
@@ -37,21 +36,6 @@ const Cron = (() => {
 		} finally {
 			console.log("CRON: getting to sleep")
 		}
-	}
-
-	async function updateYoutubeDl() {
-		return new Promise((resolve, reject) => {
-			exec(`${CONFIG.APP_ROOT}/update-youtube-dl`, (error, stdout, stderr) => {
-
-				if (error && stderr) {
-					reject(stderr)
-					return
-				}
-
-				resolve(stdout)
-
-			})
-		})
 	}
 
 	return {
