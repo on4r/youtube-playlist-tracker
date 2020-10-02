@@ -1,5 +1,5 @@
 const DB = require("./database")
-const Status = require("./status")
+const InProgress = require("./inProgress")
 const allSettled = require("promise.allsettled")
 const Parser = require("./parser")
 
@@ -47,7 +47,7 @@ async function parsePlaylistAndUpdateTables(playlist) {
 
 	try {
 
-		Status.addPlaylist(playlist.url)
+		InProgress.addPlaylist(playlist.url)
 
 		parsedPlaylist = await Parser.parsePlaylist(playlist.url)
 		parsedVideos = parsedPlaylist.entries
@@ -60,7 +60,7 @@ async function parsePlaylistAndUpdateTables(playlist) {
 		console.log("There was an error while trying to update the playlist", playlist.id, playlist.url)
 		console.error(error)
 	} finally {
-		Status.removePlaylist(playlist.url)
+		InProgress.removePlaylist(playlist.url)
 	}
 
 }
