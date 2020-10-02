@@ -99,6 +99,11 @@ Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getV
 		return
 	}
 
+	// set page title
+	if (res.locals.playlist.title && res.locals.playlist.uploader_id) {
+		res.locals.page_title = `${res.locals.playlist.title} by ${res.locals.playlist.uploader_id} - Research Mode`
+	}
+
 	// no. now we filter out the videos we want to research. (the ones which the system couldnt recover)
 	res.locals.deletedVideos = res.locals.deletedVideos.filter(video => video.title == "[Deleted]")
 
@@ -120,6 +125,11 @@ Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, ge
 	if (res.locals.error) {
 		res.render("pages/playlist")
 		return
+	}
+
+	// set page title
+	if (res.locals.playlist.title && res.locals.playlist.uploader_id) {
+		res.locals.page_title = `${res.locals.playlist.title} by ${res.locals.playlist.uploader_id}`
 	}
 
 	// filter out restored videos
@@ -176,8 +186,6 @@ async function getPlaylist(req, res, next) {
 
 	if (!playlist) {
 		res.locals.error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
-	} else if (playlist.title && playlist.uploader_id) {
-		res.locals.page_title = `${playlist.title} by ${playlist.uploader_id} - Research Mode`
 	}
 
 	res.locals.playlist = playlist
