@@ -1,6 +1,6 @@
 const express = require("express")
 const DB = require("./database")
-const InProgress = require("./InProgress")
+const InProgress = require("./inProgress")
 const Controller = require("./controller")
 const Parser = require("./parser")
 
