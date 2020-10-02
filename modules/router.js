@@ -18,7 +18,7 @@ Router.post("/", async function(req, res) {
 	const playlist_url = req.body.playlist_url
 
 	if (!PLAYLIST_REGEX.test(playlist_url)) {
-		res.render("pages/home", { message: messages().invalid, type: "error" })
+		res.render("pages/home", { message: messages().createPlaylist.invalid, type: "error" })
 		return
 	}
 
@@ -27,7 +27,7 @@ Router.post("/", async function(req, res) {
 
 	// check if id passed is a valid youtube playlist
 	if (!await Parser.validPlaylist(id)) {
-		res.render("pages/home", { message: messages().invalid, type: "error" })
+		res.render("pages/home", { message: messages().createPlaylist.invalidPlaylistId, type: "error" })
 		return
 	}
 
@@ -37,7 +37,7 @@ Router.post("/", async function(req, res) {
 
 	if (playlist) {
 
-		res.render("pages/home", { message: messages({id}).info, type: "info" })
+		res.render("pages/home", { message: messages({id}).createPlaylist.alreadyIndexed, type: "info" })
 		await DB.close()
 		return
 
@@ -47,7 +47,7 @@ Router.post("/", async function(req, res) {
 		try {
 
 			playlist = await DB.addPlaylist(id)
-			res.render("pages/home", { message: messages({id}).success, type: "success" })
+			res.render("pages/home", { message: messages({id}).createPlaylist.success, type: "success" })
 			// start the async "youtube-dl and fill database" script
 			await Controller.parsePlaylistAndUpdateTables(playlist)
 
@@ -150,7 +150,10 @@ Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, ge
 async function validatePlaylist(req, res, next) {
 
 	if (!await Parser.validPlaylist(req.params.url)) {
-		res.locals.error = "Invalid playlist id."
+		res.redirect("/")
+		return
+		//res.locals.error = messages().viewPlaylist.invalidPlaylistId
+		//res.locals.errorType = messageTypes.error
 	}
 
 	next()
@@ -165,8 +168,8 @@ async function checkProgress(req, res, next) {
 	}
 
 	if (InProgress.playlist(req.params.url)) {
-		res.locals.error = "Playlist getting updated. Check back in a few minutes."
-
+		res.locals.error = messages().viewPlaylist.updateInProgress
+		res.locals.errorType = messageTypes.info
 	}
 
 	next()
@@ -185,7 +188,8 @@ async function getPlaylist(req, res, next) {
 	let playlist = await DB.getPlaylistByUrl(req.params.url)
 
 	if (!playlist) {
-		res.locals.error = "This playlist is currently not tracked by us. You can add it <a href='/'>here</a>."
+		res.locals.error = messages().viewPlaylist.notTracked
+		res.locals.errorType = messageTypes.info
 	}
 
 	res.locals.playlist = playlist
@@ -204,7 +208,8 @@ async function getVideos(req, res, next) {
 	let videos = await DB.getVideosByPlaylistId(res.locals.playlist.id)
 
 	if (!videos.length) {
-		res.locals.error = "This playlist is empty."
+		res.locals.error = messages().viewPlaylist.empty
+		res.locals.errorType = messageTypes.info
 	}
 
 	res.locals.videos = videos
@@ -223,7 +228,8 @@ async function getDeletedVideos(req, res, next) {
 	let deletedVideos = await DB.getDeletedVideosByIds(res.locals.videos.map(v => v.id))
 
 	if (!deletedVideos.length) {
-		res.locals.error = "This playlist contains no deleted videos!"
+		res.locals.error = messages().viewPlaylist.noDeletedVideos
+		res.locals.errorType = messageTypes.success
 	}
 
 	res.locals.deletedVideos = deletedVideos
@@ -248,12 +254,26 @@ async function getDeletedVideos(req, res, next) {
 
 function messages({id} = {}) {
 	return {
-		invalid: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
-		info: `We already indexed this playlist. You can find it <a tabindex="1" href='./${id}'>here</a>.`,
-		success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a tabindex="1" href="./${id}">here</a>.`,
-		dberror: `Ups! Something went wrong. Please try again later.`,
-		dbupdate: `We are currently updating our database. Please try again later.`
+		viewPlaylist: {
+			invalidPlaylistId: `Invalid playlist ID.`,
+			updateInProgress: `Playlist getting updated. Check back in a few minutes.`,
+			notTracked: `This playlist is currently not tracked by us. You can add it <a href='/'>here</a>.`,
+			noDeletedVideos: `This playlist contains no deleted videos!`,
+			empty: `This playlist is empty.`
+		},
+		createPlaylist: {
+			invalidPlaylistId: `Please enter a <em>valid</em> and <em>public</em> playlist ID.`,
+			alreadyIndexed: `We already indexed this playlist. You can find it <a tabindex="1" href='./${id}'>here</a>.`,
+			success: `Alright, we will periodically check your playlist for deleted videos now!<br>You can check the current status <a tabindex="1" href="./${id}">here</a>.`,
+		},
+		dberror: `Ups! Something went wrong. Please try again later.`
 	}
+}
+
+const messageTypes = {
+	success: "success",
+	info: "info",
+	error: "error"
 }
 
 function restoredVideosFirst(a, b) {

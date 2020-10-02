@@ -5,11 +5,11 @@
 
 <% if (locals.error) { %>
 
-	<p class="error"><%- error %></p>
+	<p class="<%= errorType %>"><%- error %></p>
 
 <% } else { %>
 
-	<p><a class="error" href="./<%= playlist.url %>/research">Research deleted videos</a></p>
+	<p><a class="error" href="./<%= playlist.url %>/research">Research deleted videos (<%= deletedVideos.length %>)</a></p>
 	<p>Restored videos:<br>
 	<span class="success"><%= restoredVideos.length %></span> / <span class="danger"><%= restoredByUserVideos.length %></span><br>
 	<small>by system / by user</small>
