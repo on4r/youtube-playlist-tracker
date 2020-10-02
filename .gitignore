@@ -3,3 +3,5 @@ node_modules/
 .vscode
 ._*
 youtube-dl
+*.sqlite
+!empty.sqlite
