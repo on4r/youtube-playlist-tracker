@@ -1,7 +1,7 @@
 const Database = require("./database")
 const InProgress = require("./in-progress")
-const allSettled = require("promise.allsettled")
 const Parser = require("./parser")
+//const allSettled = require("promise.allsettled")
 
 /**
  * Find all playlists in Database and pass them to the parsePlaylistAndUpdateTables() function
