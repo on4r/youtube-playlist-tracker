@@ -18,7 +18,7 @@ Router.post("/", async function(req, res) {
 	const playlist_url = req.body.playlist_url
 
 	if (!PLAYLIST_REGEX.test(playlist_url)) {
-		res.render("pages/home", { message: messages().createPlaylist.invalid, type: "error" })
+		res.render("pages/home", { message: messages().createPlaylist.invalidPlaylistId, type: "error" })
 		return
 	}
 
