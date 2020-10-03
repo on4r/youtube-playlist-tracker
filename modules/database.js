@@ -1,12 +1,18 @@
 const sqlite3 = require("sqlite3").verbose()
+const fs = require("fs")
 const InProgress = require("./in-progress")
 
 let db = {}
 let dbLocation = null
 
 function init(pathToDatabase) {
-	dbLocation = pathToDatabase
-	console.log("DATABASE: using", pathToDatabase)
+	if (fs.existsSync(pathToDatabase)) {
+		dbLocation = pathToDatabase
+		console.log("DATABASE: using", pathToDatabase)
+	} else {
+		console.log("DATABASE: file does not exist", pathToDatabase)
+		process.exit(1)
+	}
 }
 
 function openDatabase() {
