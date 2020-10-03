@@ -1,5 +1,5 @@
 const sqlite3 = require("sqlite3").verbose()
-const InProgress = require("./inProgress")
+const InProgress = require("./in-progress")
 
 let db = {}
 let dbLocation = null

@@ -1,13 +1,13 @@
 const Controller = require("../modules/controller");
-const DB = require("../modules/database");
+const Database = require("../modules/database");
 const Config = require("../config")
 
 const update = async function(url) {
 
 	try {
-		DB.init(Config.DATABASE_PATH)
-		await DB.open()
-		let playlist = await DB.getPlaylistByUrl(url)
+		Database.init(Config.DATABASE_PATH)
+		await Database.open()
+		let playlist = await Database.getPlaylistByUrl(url)
 		if (playlist) {
 			await Controller.parsePlaylistAndUpdateTables(playlist)
 		}
@@ -15,7 +15,7 @@ const update = async function(url) {
 		console.error("cliUpdatePlaylist ERROR")
 		console.error(error)
 	} finally {
-		await DB.close()
+		await Database.close()
 	}
 
 }

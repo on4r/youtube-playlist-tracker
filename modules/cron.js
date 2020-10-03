@@ -1,6 +1,6 @@
 const CronJob = require("cron").CronJob
 const Controller = require("./controller")
-const YoutubeDl = require("./youtubeDl")
+const YoutubeDl = require("./youtube-dl")
 
 const dailyUpdateJob = new CronJob("0 0 0 */1 * *", updateHandler, null)
 const hourlyUpdateJob = new CronJob("0 0 */1 * * *", updateHandler, null)

@@ -3,12 +3,12 @@ const bodyParser = require("body-parser")
 const Config = require("./config")
 const Cron = require("./modules/cron")
 const Router = require("./modules/router")
-const DB = require("./modules/database")
+const Database = require("./modules/database")
 
 const App = express()
 
 // specific database to use
-DB.init(Config.DATABASE_PATH)
+Database.init(Config.DATABASE_PATH)
 
 // set view engine
 App.set("view engine", "ejs")
