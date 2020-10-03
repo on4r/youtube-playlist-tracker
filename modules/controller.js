@@ -1,10 +1,10 @@
-const DB = require("./database")
+const Database = require("./database")
 const InProgress = require("./inProgress")
 const allSettled = require("promise.allsettled")
 const Parser = require("./parser")
 
 /**
- * Find all playlists in DB and pass them to the parsePlaylistAndUpdateTables() function
+ * Find all playlists in Database and pass them to the parsePlaylistAndUpdateTables() function
  *
  * @return {Promise}
  */
@@ -13,9 +13,9 @@ async function updateAllPlaylists() {
 
 		try {
 
-			await DB.open()
+			await Database.open()
 
-			let playlists = await DB.allPlaylists()
+			let playlists = await Database.allPlaylists()
 
 			for (let playlist of playlists) {
 				await parsePlaylistAndUpdateTables(playlist)
@@ -25,7 +25,7 @@ async function updateAllPlaylists() {
 			console.log("Database Error in updateAllPlaylists()")
 			reject(error)
 		} finally {
-			await DB.close()
+			await Database.close()
 		}
 
 		resolve()
@@ -84,7 +84,7 @@ async function updatePlaylist(playlist, parsedPlaylist) {
 		values.uploader_id = parsedPlaylist.uploader_id
 
 	if (values.title !== undefined || values.uploader_id !== undefined)
-		await DB.updatePlaylist(playlist.id, values)
+		await Database.updatePlaylist(playlist.id, values)
 
 }
 
@@ -96,7 +96,7 @@ async function updatePlaylist(playlist, parsedPlaylist) {
 */
 async function createOrUpdateVideos(parsedVideos) {
 
-	let videos = await DB.getVideosByUrls( parsedVideos.map(v => v.url) )
+	let videos = await Database.getVideosByUrls( parsedVideos.map(v => v.url) )
 	let videosToCreate = []
 	let videosToUpdate = []
 	let urls = videos.map(v => v.url)
@@ -117,11 +117,11 @@ async function createOrUpdateVideos(parsedVideos) {
 	})
 
 	// add new videos ...
-	await DB.addVideos(videosToCreate)
+	await Database.addVideos(videosToCreate)
 
 	// ... and update existing ones
 	for (let id of videosToUpdate) {
-		await DB.updateVideo(id, {deleted: 1})
+		await Database.updateVideo(id, {deleted: 1})
 	}
 
 }
@@ -151,7 +151,7 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 	let removedVideoUrls = []
 
 	// currentVideoUrls(FromPlaylist)
-	let currentVideoUrls = (await DB.getVideosByPlaylistId(playlistId)).map(v => v.url)
+	let currentVideoUrls = (await Database.getVideosByPlaylistId(playlistId)).map(v => v.url)
 	let latestVideoUrls = parsedVideos.map(v => v.url)
 
 	// check if there are new videos in the playlist
@@ -168,18 +168,18 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos) {
 
 	// to create a NEW joint relations,
 	// the new video MUST be inserted into the database before
-	let newVideos = await DB.getVideosByUrls(newVideoUrls)
+	let newVideos = await Database.getVideosByUrls(newVideoUrls)
 	let jointRelationsToCreate = newVideos.map(v => {
 		return {
 			playlist_id: playlistId,
 			video_id: v.id
 		}
 	})
-	await DB.addJointRelations(jointRelationsToCreate)
+	await Database.addJointRelations(jointRelationsToCreate)
 
 	// delete removed videos
-	let removedVideoIds = (await DB.getVideosByUrls(removedVideoUrls)).map(v => v.id)
-	await DB.deleteJointRelationsOfPlaylistByVideoIds(playlistId, removedVideoIds)
+	let removedVideoIds = (await Database.getVideosByUrls(removedVideoUrls)).map(v => v.id)
+	await Database.deleteJointRelationsOfPlaylistByVideoIds(playlistId, removedVideoIds)
 
 }
 

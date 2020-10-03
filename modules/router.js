@@ -1,5 +1,5 @@
 const express = require("express")
-const DB = require("./database")
+const Database = require("./database")
 const InProgress = require("./inProgress")
 const Controller = require("./controller")
 const Parser = require("./parser")
@@ -32,13 +32,13 @@ Router.post("/", async function(req, res) {
 	}
 
 	// check if playlist is already indexed
-	await DB.open()
-	let playlist = await DB.getPlaylistByUrl(id)
+	await Database.open()
+	let playlist = await Database.getPlaylistByUrl(id)
 
 	if (playlist) {
 
 		res.render("pages/home", { message: messages({id}).createPlaylist.alreadyIndexed, type: "info" })
-		await DB.close()
+		await Database.close()
 		return
 
 	} else {
@@ -46,7 +46,7 @@ Router.post("/", async function(req, res) {
 		// playlist does not exist and will therefore be added
 		try {
 
-			playlist = await DB.addPlaylist(id)
+			playlist = await Database.addPlaylist(id)
 			res.render("pages/home", { message: messages({id}).createPlaylist.success, type: "success" })
 			// start the async "youtube-dl and fill database" script
 			await Controller.parsePlaylistAndUpdateTables(playlist)
@@ -58,7 +58,7 @@ Router.post("/", async function(req, res) {
 			return
 
 		} finally {
-			await DB.close()
+			await Database.close()
 		}
 
 	}
@@ -74,12 +74,12 @@ Router.post("/videos/:id/update", async function(req, res) {
 	// validate user_title (serialize, escape, w/e)
 
 	try {
-		await DB.open()
-		await DB.updateVideo(video_id, {user_title})
+		await Database.open()
+		await Database.updateVideo(video_id, {user_title})
 	} catch (error) {
 		console.log("Error while POST /videos/:id/update/", error)
 	} finally {
-		await DB.close()
+		await Database.close()
 	}
 
 	res.redirect(`${stripQueryParams(req.headers.referer)}?updated=${video_id}`)
@@ -90,8 +90,8 @@ Router.post("/videos/:id/update", async function(req, res) {
 // research playlist
 Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
 
-	// first: close the DB (maybe it was used)
-	await DB.close()
+	// first: close the Database (maybe it was used)
+	await Database.close()
 
 	// was there an error on the way?
 	if (res.locals.error) {
@@ -118,8 +118,8 @@ Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getV
 // show playlist
 Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
 
-	// first: close the DB (maybe it was used)
-	await DB.close()
+	// first: close the Database (maybe it was used)
+	await Database.close()
 
 	// was there an error on the way?
 	if (res.locals.error) {
@@ -183,9 +183,9 @@ async function getPlaylist(req, res, next) {
 		return
 	}
 
-	await DB.open()
+	await Database.open()
 
-	let playlist = await DB.getPlaylistByUrl(req.params.url)
+	let playlist = await Database.getPlaylistByUrl(req.params.url)
 
 	if (!playlist) {
 		res.locals.error = messages().viewPlaylist.notTracked
@@ -205,7 +205,7 @@ async function getVideos(req, res, next) {
 		return
 	}
 
-	let videos = await DB.getVideosByPlaylistId(res.locals.playlist.id)
+	let videos = await Database.getVideosByPlaylistId(res.locals.playlist.id)
 
 	if (!videos.length) {
 		res.locals.error = messages().viewPlaylist.empty
@@ -225,7 +225,7 @@ async function getDeletedVideos(req, res, next) {
 		return
 	}
 
-	let deletedVideos = await DB.getDeletedVideosByIds(res.locals.videos.map(v => v.id))
+	let deletedVideos = await Database.getDeletedVideosByIds(res.locals.videos.map(v => v.id))
 
 	if (!deletedVideos.length) {
 		res.locals.error = messages().viewPlaylist.noDeletedVideos

@@ -4,9 +4,9 @@ const InProgress = require("./inProgress")
 let db = {}
 let dbLocation = null
 
-function init(pathToDB) {
-	dbLocation = pathToDB
-	console.log("DATABASE: using", pathToDB)
+function init(pathToDatabase) {
+	dbLocation = pathToDatabase
+	console.log("DATABASE: using", pathToDatabase)
 }
 
 function openDatabase() {
@@ -24,7 +24,7 @@ function openDatabase() {
 function closeDatabase() {
 	return new Promise((resolve, reject) => {
 
-		// keep DB open as long as any playlist is getting updated
+		// keep Database open as long as any playlist is getting updated
 		if (InProgress.any()) {
 			resolve(0)
 			return
