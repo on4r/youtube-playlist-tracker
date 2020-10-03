@@ -166,7 +166,11 @@ function addVideos(data) {
 				reject(error)
 			} else {
 				resolve()
-				console.log(`Created ${this.changes} new Videos`)
+				let newVideos = "..."
+				if (this.changes <= 5) {
+					newVideos = data.map(v => v.title).join(", ")
+				}
+				console.log(`Created ${this.changes} new Videos: [${newVideos}]`)
 			}
 		})
 	})
@@ -188,7 +192,11 @@ function addJointRelations(data) {
 				reject(error)
 			} else {
 				resolve()
-				console.log(`Created ${this.changes} Joint-Relations`)
+				let newJointRelations = "..."
+				if (this.changes <= 5) {
+					newJointRelations = data.map(jr => `(${jr.playlist_id}, ${jr.video_id})`).join(", ")
+				}
+				console.log(`Created ${this.changes} Joint-Relations: [${newJointRelations}]`)
 			}
 		})
 	})
@@ -258,7 +266,11 @@ function deleteJointRelationsOfPlaylistByVideoIds(playlistId, videoIds) {
 				reject(error)
 			} else {
 				resolve()
-				console.log(`Deleted ${this.changes} Joint-Relations of playlist ${playlistId}`)
+				let oldVideoIds = "..."
+				if (this.changes <= 5) {
+					oldVideoIds = videoIds
+				}
+				console.log(`Deleted ${this.changes} Joint-Relations of playlist ${playlistId}: ${oldVideoIds}`)
 			}
 		})
 	})
