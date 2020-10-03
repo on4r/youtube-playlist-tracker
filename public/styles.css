@@ -4,18 +4,11 @@ body {
 	text-align: center;
 	background-color: floralwhite;
 	font-family: sans-serif;
-}
-
-.logo + * {
-	margin-top: 3rem;
-}
-
-.subtitle {
-	margin-top: -1rem;
+	margin: 3rem 0 0 0;
 }
 
 a,
-.logo {
+h1 {
 	font-family: monospace;
 }
 
@@ -31,6 +24,10 @@ a.logo {
 
 a.no-highlight {
 	color: initial;
+}
+
+p.subtitle {
+	margin-top: -1rem;
 }
 
 /* Focus */

@@ -2,32 +2,32 @@
 
 <%- include("../partials/navigation") %>
 <%- include("../partials/playlist-info") %>
-<a href="./<%= playlist.url %>">back</a>
 
-<div id="forms">
-<% deletedVideos.forEach(function(video) { %>
-<form action="./videos/<%= video.id %>/update" method="post">
-	<fieldset>
-		<a href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
-		<label>user title
-		<input
-			name="user_title"
-			type="text"
-			value="<%= video.user_title %>"
-			placeholder="<%= video.url %>"
-			<% if (updated == video.id) {%>class="success"<%}%>></label>
-		<button>update</button>
-	</fieldset>
-</form>
-<% }) %>
-</div>
+<% if (locals.error) { %>
 
-<script>
-document.body.addEventListener("submit", function(event) {
-	let action = event.target.action
-	let value = event.target[1].value
-//	event.preventDefault()
-})
-</script>
+	<p class="<%= errorType %>"><%- error %></p>
+
+<% } else { %>
+
+	<a href="./<%= playlist.url %>">back</a>
+	<div id="forms">
+	<% deletedVideos.forEach(function(video) { %>
+	<form action="./videos/<%= video.id %>/update" method="post">
+		<fieldset>
+			<a href="https://www.google.com/search?q=<%= video.url %>" target="_blank">search</a>
+			<label>user title
+			<input
+				name="user_title"
+				type="text"
+				value="<%= video.user_title %>"
+				placeholder="<%= video.url %>"
+				<% if (updated == video.id) {%>class="success"<%}%>></label>
+			<button>update</button>
+		</fieldset>
+	</form>
+	<% }) %>
+	</div>
+
+<% } %>
 
 <%- include ("../partials/footer") %>
