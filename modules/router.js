@@ -31,36 +31,28 @@ Router.post("/", async function(req, res) {
 		return
 	}
 
-	// check if playlist is already indexed
-	await Database.open()
-	let playlist = await Database.getPlaylistByUrl(id)
+	try {
 
-	if (playlist) {
+		await Database.open()
 
-		res.render("pages/home", { message: messages({id}).createPlaylist.alreadyIndexed, type: "info" })
-		await Database.close()
-		return
-
-	} else {
-
-		// playlist does not exist and will therefore be added
-		try {
-
-			playlist = await Database.addPlaylist(id)
-			res.render("pages/home", { message: messages({id}).createPlaylist.success, type: "success" })
-			// start the async "youtube-dl and fill database" script
-			await Controller.parsePlaylistAndUpdateTables(playlist)
-
-		} catch (e) {
-
-			console.error("Database Error in app.post('/')", e)
-			res.render("pages/home", { message: messages().dberror, type: "error" })
+		// check if playlist is already indexed
+		if (await Database.getPlaylistByUrl(id)) {
+			res.render("pages/home", { message: messages({id}).createPlaylist.alreadyIndexed, type: "info" })
 			return
-
-		} finally {
-			await Database.close()
 		}
 
+		// playlist does not exist and will therefore be added
+		let playlist = await Database.addPlaylist(id)
+		res.render("pages/home", { message: messages({id}).createPlaylist.success, type: "success" })
+
+		// start the async "youtube-dl and fill database" script
+		await Controller.parsePlaylistAndUpdateTables(playlist)
+
+	} catch (e) {
+		console.error("Database Error in app.post('/')", e)
+		res.render("pages/home", { message: messages().dberror, type: "error" })
+	} finally {
+		await Database.close()
 	}
 
 })
