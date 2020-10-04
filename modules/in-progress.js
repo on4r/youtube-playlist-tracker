@@ -21,7 +21,7 @@ function addPlaylist(id)
 
 function removePlaylist(id)
 {
-	if ( !this.playlist(id) )
+	if (!this.playlist(id))
 		return
 	let i = PLAYLISTS.indexOf(id)
 	return PLAYLISTS.splice(i, 1)

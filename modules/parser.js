@@ -10,8 +10,10 @@ const Config = require("../config")
  */
 function validPlaylist(id)
 {
-	return new Promise((resolve, reject) => {
-		https.get(`https://www.youtube.com/playlist?list=${id}`, ({statusCode}) => {
+	return new Promise((resolve, reject) =>
+	{
+		https.get(`https://www.youtube.com/playlist?list=${id}`, ({statusCode}) =>
+		{
 			if (statusCode == 200)
 				resolve(true)
 			else
@@ -28,9 +30,10 @@ function validPlaylist(id)
  */
 async function parsePlaylist(playlistId)
 {
-	return new Promise((resolve, reject) => {
-		exec(`${Config.YOUTUBE_DL_PATH} --dump-single-json --flat-playlist ${playlistId}`, (error, stdout, stderr) => {
-
+	return new Promise((resolve, reject) =>
+	{
+		exec(`${Config.YOUTUBE_DL_PATH} --dump-single-json --flat-playlist ${playlistId}`, (error, stdout, stderr) =>
+		{
 			if (error && stderr) {
 				reject(stderr)
 				return
@@ -43,7 +46,6 @@ async function parsePlaylist(playlistId)
 			} catch (parseError) {
 				reject(parseError)
 			}
-
 		})
 	})
 }

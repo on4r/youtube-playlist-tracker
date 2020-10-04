@@ -21,15 +21,19 @@ function initHourlyUpdate()
 async function updateHandler()
 {
 	console.log("CRON: getting to work", new Date())
+
 	try {
 		let response = await YoutubeDl.updateBinary()
 		response = response.trimEnd().replace(/^/gm, "> ")
+
 		console.log("CRON: update-youtube-dl says:")
 		console.log(response)
 		console.log("CRON: starting to update playlists")
+
 		let startTime = new Date()
 		await Controller.updateAllPlaylists()
 		let endTime = new Date()
+
 		console.log("CRON: finished updating playlists")
 		console.log("CRON: updated took", ((endTime-startTime)/1000), "seconds to complete")
 	} catch (error) {

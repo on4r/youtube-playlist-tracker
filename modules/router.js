@@ -8,13 +8,14 @@ const Router = express.Router()
 const PLAYLIST_REGEX = /^https:\/\/www\.youtube\.com\/playlist\?list=([A-Za-z0-9_-]+)$/
 
 // home
-Router.get("/", (req, res) => {
+Router.get("/", function(req, res)
+{
 	res.render("pages/home", { message: null, type: null })
 })
 
 // add playlist
-Router.post("/", async (req, res) => {
-
+Router.post("/", async function(req, res)
+{
 	const playlist_url = req.body.playlist_url
 
 	if (!PLAYLIST_REGEX.test(playlist_url)) {
@@ -32,7 +33,6 @@ Router.post("/", async (req, res) => {
 	}
 
 	try {
-
 		await Database.open()
 
 		// check if playlist is already indexed
@@ -47,19 +47,17 @@ Router.post("/", async (req, res) => {
 
 		// start the async "youtube-dl and fill database" script
 		await Controller.parsePlaylistAndUpdateTables(playlist)
-
 	} catch (e) {
 		console.error("Database Error in app.post('/')", e)
 		res.render("pages/home", { message: messages().dberror, type: "error" })
 	} finally {
 		await Database.close()
 	}
-
 })
 
 // update video
-Router.post("/videos/:id/update", async (req, res) => {
-
+Router.post("/videos/:id/update", async function(req, res)
+{
 	const video_id = req.params.id
 	const user_title = req.body.user_title
 
@@ -75,13 +73,18 @@ Router.post("/videos/:id/update", async (req, res) => {
 	}
 
 	res.redirect(`${stripQueryParams(req.headers.referer)}?updated=${video_id}`)
-	return
-
 })
 
 // research playlist
-Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async (req, res) => {
-
+Router.get("/:url/research",
+	[
+		validatePlaylist,
+		checkProgress,
+		getPlaylist,
+		getVideos,
+		getDeletedVideos
+	], async function(req, res)
+{
 	// first: close the Database (maybe it was used)
 	await Database.close()
 
@@ -104,12 +107,18 @@ Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getV
 
 	// and render the template
 	res.render("pages/playlist-research")
-
 })
 
 // show playlist
-Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async (req, res) => {
-
+Router.get("/:url",
+	[
+		validatePlaylist,
+		checkProgress,
+		getPlaylist,
+		getVideos,
+		getDeletedVideos
+	], async function(req, res)
+{
 	// first: close the Database (maybe it was used)
 	await Database.close()
 
@@ -132,7 +141,6 @@ Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, ge
 
 	// render the template
 	res.render("pages/playlist")
-
 })
 
 /*
