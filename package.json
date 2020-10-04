@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "updateAllPlaylists": "node cli/updateAllPlaylists",
-    "updatePlaylist": "node cli/updatePlaylist"
+    "updatePlaylist": "node cli/updatePlaylist",
+    "addPlaylist": "node cli/addPlaylist"
   },
   "keywords": ["youtube-dl", "express", "sqlite", "ejs"],
   "author": "on4r",

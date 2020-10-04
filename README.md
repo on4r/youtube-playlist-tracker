@@ -55,6 +55,8 @@ Start server
 12. There exists something called `N-API` which serves as an interface for low level programms written in `C/C++`. [Read more](https://medium.com/jspoint/a-simple-guide-to-load-c-c-code-into-node-js-javascript-applications-3fcccf54fd32)
 13. You can reduce the current tabindex with `Shift-Tab`.
 14. Maximize windows in *gnome* with `Alt-F10`.
+15. To return an `Object` from oneline arrow functions put the obj in parenthesis so the parser handles it as an an expression and not a block statement. 
+  `a.map(x => ({ a:1, b:2 }))`.
 
 ## youtube-dl
 

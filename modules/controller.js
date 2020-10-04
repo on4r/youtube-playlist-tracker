@@ -163,7 +163,7 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos)
 	// to create a NEW joint relations,
 	// the new video MUST be inserted into the database before
 	let newVideos = await Database.getVideosByUrls(newVideoUrls)
-	let jointRelationsToCreate = newVideos.map(v => { playlist_id: playlistId, video_id: v.id })
+	let jointRelationsToCreate = newVideos.map(v => ({ playlist_id: playlistId, video_id: v.id }))
 	await Database.addJointRelations(jointRelationsToCreate)
 
 	// delete removed videos
