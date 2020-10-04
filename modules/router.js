@@ -8,12 +8,12 @@ const Router = express.Router()
 const PLAYLIST_REGEX = /^https:\/\/www\.youtube\.com\/playlist\?list=([A-Za-z0-9_-]+)$/
 
 // home
-Router.get("/", function(req, res) {
+Router.get("/", (req, res) => {
 	res.render("pages/home", { message: null, type: null })
 })
 
 // add playlist
-Router.post("/", async function(req, res) {
+Router.post("/", async (req, res) => {
 
 	const playlist_url = req.body.playlist_url
 
@@ -58,7 +58,7 @@ Router.post("/", async function(req, res) {
 })
 
 // update video
-Router.post("/videos/:id/update", async function(req, res) {
+Router.post("/videos/:id/update", async (req, res) => {
 
 	const video_id = req.params.id
 	const user_title = req.body.user_title
@@ -80,7 +80,7 @@ Router.post("/videos/:id/update", async function(req, res) {
 })
 
 // research playlist
-Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
+Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async (req, res) => {
 
 	// first: close the Database (maybe it was used)
 	await Database.close()
@@ -108,7 +108,7 @@ Router.get("/:url/research", [validatePlaylist, checkProgress, getPlaylist, getV
 })
 
 // show playlist
-Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async function(req, res) {
+Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, getDeletedVideos], async (req, res) => {
 
 	// first: close the Database (maybe it was used)
 	await Database.close()
@@ -139,8 +139,8 @@ Router.get("/:url", [validatePlaylist, checkProgress, getPlaylist, getVideos, ge
  * Middleware for /playlists
  */
 
-async function validatePlaylist(req, res, next) {
-
+async function validatePlaylist(req, res, next)
+{
 	if (!await Parser.validPlaylist(req.params.url)) {
 		res.redirect("/")
 		return
@@ -149,11 +149,10 @@ async function validatePlaylist(req, res, next) {
 	}
 
 	next()
-
 }
 
-async function checkProgress(req, res, next) {
-
+async function checkProgress(req, res, next)
+{
 	if (res.locals.error) {
 		next()
 		return
@@ -165,11 +164,10 @@ async function checkProgress(req, res, next) {
 	}
 
 	next()
-
 }
 
-async function getPlaylist(req, res, next) {
-
+async function getPlaylist(req, res, next)
+{
 	if (res.locals.error) {
 		next()
 		return
@@ -187,11 +185,10 @@ async function getPlaylist(req, res, next) {
 	res.locals.playlist = playlist
 
 	next()
-
 }
 
-async function getVideos(req, res, next) {
-
+async function getVideos(req, res, next)
+{
 	if (res.locals.error) {
 		next()
 		return
@@ -207,11 +204,10 @@ async function getVideos(req, res, next) {
 	res.locals.videos = videos
 
 	next()
-
 }
 
-async function getDeletedVideos(req, res, next) {
-
+async function getDeletedVideos(req, res, next)
+{
 	if (res.locals.error) {
 		next()
 		return
@@ -227,7 +223,6 @@ async function getDeletedVideos(req, res, next) {
 	res.locals.deletedVideos = deletedVideos
 
 	next()
-
 }
 
 /*
@@ -244,7 +239,8 @@ async function getDeletedVideos(req, res, next) {
  * Helpers
  */
 
-function messages({id} = {}) {
+function messages({id} = {})
+{
 	return {
 		viewPlaylist: {
 			invalidPlaylistId: `Invalid playlist ID.`,
@@ -268,11 +264,13 @@ const messageTypes = {
 	error: "error"
 }
 
-function restoredVideosFirst(a, b) {
+function restoredVideosFirst(a, b)
+{
 	return (a.user_title) ? 1 : -1
 }
 
-function stripQueryParams(string) {
+function stripQueryParams(string)
+{
 	let index = string.indexOf("?")
 	// if no query params return string
 	if (index < 0)

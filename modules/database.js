@@ -5,7 +5,8 @@ const InProgress = require("./in-progress")
 let db = {}
 let dbLocation = null
 
-function init(pathToDatabase) {
+function init(pathToDatabase)
+{
 	if (fs.existsSync(pathToDatabase)) {
 		dbLocation = pathToDatabase
 		console.log("DATABASE: using", pathToDatabase)
@@ -15,19 +16,21 @@ function init(pathToDatabase) {
 	}
 }
 
-function openDatabase() {
+function openDatabase()
+{
 	return new Promise((resolve, reject) => {
 
-		db = new sqlite3.Database(dbLocation, sqlite3.OPEN_READWRITE, function(error) {
+		db = new sqlite3.Database(dbLocation, sqlite3.OPEN_READWRITE, (error) => {
 			if (error)
 				reject(error)
-			resolve(0)
-			//console.log("DATABASE: opened")
+			else
+				resolve(0)
 		})
 	})
 }
 
-function closeDatabase() {
+function closeDatabase()
+{
 	return new Promise((resolve, reject) => {
 
 		// keep Database open as long as any playlist is getting updated
@@ -37,11 +40,10 @@ function closeDatabase() {
 		}
 
 		try {
-			db.close(function(error) {
+			db.close((error) => {
 				if (error)
 					throw error
 				resolve(0)
-				//console.log("DATABASE: closed")
 			})
 		} catch (e) {
 			resolve(0)
@@ -49,10 +51,11 @@ function closeDatabase() {
 	})
 }
 
-function allPlaylists() {
+function allPlaylists()
+{
 	return new Promise((resolve, reject) => {
 
-		db.all("SELECT * FROM playlists", function(error, playlists) {
+		db.all("SELECT * FROM playlists", (error, playlists) => {
 			if (error) {
 				error.fn = "allPlaylists"
 				reject(error)
@@ -63,10 +66,11 @@ function allPlaylists() {
 	})
 }
 
-function getPlaylistByUrl(url) {
+function getPlaylistByUrl(url)
+{
 	return new Promise((resolve, reject) => {
 
-		db.get(`SELECT * FROM playlists WHERE url = "${url}"`, [], function(error, playlist) {
+		db.get(`SELECT * FROM playlists WHERE url = "${url}"`, [], (error, playlist) => {
 			if (error) {
 				error.fn = "getPlaylistByUrl"
 				reject(error)
@@ -79,10 +83,11 @@ function getPlaylistByUrl(url) {
 	})
 }
 
-function getVideosByPlaylistId(id) {
+function getVideosByPlaylistId(id)
+{
 	return new Promise((resolve, reject) => {
 
-		db.all(`SELECT video_id FROM playlists_videos WHERE playlist_id=${id}`, [], function(error, videos) {
+		db.all(`SELECT video_id FROM playlists_videos WHERE playlist_id=${id}`, [], (error, videos) => {
 			if (error) {
 				error.fn = "getVideosByPlaylistId"
 				reject(error)
@@ -90,7 +95,7 @@ function getVideosByPlaylistId(id) {
 				resolve([])
 			} else {
 				let videoIds = videos.map(v => v.video_id).join(", ")
-				db.all(`SELECT * FROM videos WHERE id IN (${videoIds})`, [], function(error, videos) {
+				db.all(`SELECT * FROM videos WHERE id IN (${videoIds})`, [], (error, videos) => {
 					if (error) {
 						error.fn = "getVideosByPlaylistId 2"
 						reject(error)
@@ -103,47 +108,53 @@ function getVideosByPlaylistId(id) {
 	})
 }
 
-function getDeletedVideosByIds(ids) {
+function getDeletedVideosByIds(ids)
+{
 	return new Promise((resolve, reject) => {
 
 		if (!ids.length) {
 			resolve([])
-		} else {
-			db.all(`SELECT * FROM videos WHERE id IN (${ids.join(", ")}) AND deleted = 1`, [], function(error, deletedVideos) {
-				if (error) {
-					error.fn = "getDeletedVideosByIds"
-					reject(error)
-				} else {
-					resolve(deletedVideos)
-				}
-			})
+			return
 		}
+
+		db.all(`SELECT * FROM videos WHERE id IN (${ids.join(", ")}) AND deleted = 1`, [], (error, deletedVideos) => {
+			if (error) {
+				error.fn = "getDeletedVideosByIds"
+				reject(error)
+			} else {
+				resolve(deletedVideos)
+			}
+		})
 	})
 }
 
-function getVideosByUrls(urls) {
+function getVideosByUrls(urls)
+{
 	return new Promise((resolve, reject) => {
 
 		if (!urls.length) {
 			resolve([])
-		} else {
-			let preparedUrls = urls.map(u => `"${u}"`).join(", ")
-			db.all(`SELECT * FROM videos WHERE url IN (${preparedUrls})`, [], function(error, videos) {
-				if (error) {
-					error.fn = "getVideosByUrls"
-					reject(error)
-				} else {
-					resolve(videos)
-				}
-			})
+			return
 		}
+
+		let preparedUrls = urls.map(u => `"${u}"`).join(", ")
+
+		db.all(`SELECT * FROM videos WHERE url IN (${preparedUrls})`, [], (error, videos) => {
+			if (error) {
+				error.fn = "getVideosByUrls"
+				reject(error)
+			} else {
+				resolve(videos)
+			}
+		})
 	})
 }
 
-function addPlaylist(url) {
+function addPlaylist(url)
+{
 	return new Promise((resolve, reject) => {
 
-		db.run(`INSERT INTO playlists(url) VALUES("${url}")`, [], function(error) {
+		db.run(`INSERT INTO playlists(url) VALUES("${url}")`, [], (error) => {
 			if (error) {
 				error.fn = "addPlaylist"
 				reject(error)
@@ -155,7 +166,8 @@ function addPlaylist(url) {
 	})
 }
 
-function addVideos(data) {
+function addVideos(data)
+{
 	return new Promise((resolve, reject) => {
 
 		if (!data.length) {
@@ -166,7 +178,7 @@ function addVideos(data) {
 		// data: [{url, title, deleted}, {url, title, deleted}]
 		// escape double quotes in video title
 		let values = data.map(v => `("${v.url}", "${v.title.replace(/"/g,'""')}", ${v.deleted})`).join(", ")
-		db.run(`INSERT INTO videos (url, title, deleted) VALUES ${values}`, [], function(error) {
+		db.run(`INSERT INTO videos (url, title, deleted) VALUES ${values}`, [], (error) => {
 			if (error) {
 				error.fn = "addVideos"
 				reject(error)
@@ -182,7 +194,8 @@ function addVideos(data) {
 	})
 }
 
-function addJointRelations(data) {
+function addJointRelations(data)
+{
 	return new Promise((resolve, reject) => {
 
 		if (!data.length) {
@@ -192,7 +205,7 @@ function addJointRelations(data) {
 
 		// data : [{playlist_id, video_id}, {playlist_id, video_id}]
 		let values = data.map(jr => `(${jr.playlist_id}, ${jr.video_id})`).join(", ")
-		db.run(`INSERT INTO playlists_videos (playlist_id, video_id) VALUES ${values}`, [], function(error) {
+		db.run(`INSERT INTO playlists_videos (playlist_id, video_id) VALUES ${values}`, [], (error) => {
 			if (error) {
 				error.fn = "addJointRelations"
 				reject(error)
@@ -208,7 +221,8 @@ function addJointRelations(data) {
 	})
 }
 
-function updatePlaylist(id, data) {
+function updatePlaylist(id, data)
+{
 	return new Promise((resolve, reject) => {
 
 		let fields = []
@@ -221,7 +235,7 @@ function updatePlaylist(id, data) {
 
 		fields.join(", ")
 
-		db.run(`UPDATE playlists SET ${fields} WHERE id = ?`, [...values, id], function(error) {
+		db.run(`UPDATE playlists SET ${fields} WHERE id = ?`, [...values, id], (error) => {
 			if (error) {
 				error.fn = "updatePlaylist"
 				reject(error)
@@ -233,7 +247,8 @@ function updatePlaylist(id, data) {
 	})
 }
 
-function updateVideo(id, data) {
+function updateVideo(id, data)
+{
 	return new Promise((resolve, reject) => {
 
 		let fields = []
@@ -246,7 +261,7 @@ function updateVideo(id, data) {
 
 		fields.join(", ")
 
-		db.run(`UPDATE videos SET ${fields} WHERE id = ?`, [...values, id], function(error) {
+		db.run(`UPDATE videos SET ${fields} WHERE id = ?`, [...values, id], (error) => {
 			if (error) {
 				error.fn = "updateVideo"
 				reject(error)
@@ -258,7 +273,8 @@ function updateVideo(id, data) {
 	})
 }
 
-function deleteJointRelationsOfPlaylistByVideoIds(playlistId, videoIds) {
+function deleteJointRelationsOfPlaylistByVideoIds(playlistId, videoIds)
+{
 	return new Promise((resolve, reject) =>  {
 
 		if (!videoIds.length) {
@@ -266,7 +282,7 @@ function deleteJointRelationsOfPlaylistByVideoIds(playlistId, videoIds) {
 			return
 		}
 
-		db.run(`DELETE FROM playlists_videos WHERE playlist_id=${playlistId} AND video_id IN (${videoIds.join(", ")})`, [], function(error) {
+		db.run(`DELETE FROM playlists_videos WHERE playlist_id=${playlistId} AND video_id IN (${videoIds.join(", ")})`, [], (error) => {
 			if (error) {
 				error.fn = "deleteJointRelationsOfPlaylistByVideoIds"
 				reject(error)

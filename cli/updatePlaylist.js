@@ -2,8 +2,8 @@ const Controller = require("../modules/controller");
 const Database = require("../modules/database");
 const Config = require("../config")
 
-const update = async function(url) {
-
+async function update(url)
+{
 	try {
 		Database.init(Config.DATABASE_PATH)
 		await Database.open()
@@ -17,7 +17,6 @@ const update = async function(url) {
 	} finally {
 		await Database.close()
 	}
-
 }
 
 if (!process.argv[2]) {

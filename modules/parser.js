@@ -8,9 +8,10 @@ const Config = require("../config")
  * @param	{String}	id	- The playlist id to query (Direct from the user)
  * @return	{Promise}		- Resolves with Boolean true or false
  */
-function validPlaylist(id) {
+function validPlaylist(id)
+{
 	return new Promise((resolve, reject) => {
-		https.get(`https://www.youtube.com/playlist?list=${id}`, function({statusCode}) {
+		https.get(`https://www.youtube.com/playlist?list=${id}`, ({statusCode}) => {
 			if (statusCode == 200)
 				resolve(true)
 			else
@@ -25,7 +26,8 @@ function validPlaylist(id) {
  * @param	{String}	playlistId 	- A YouTube Playlist ID
  * @return	{Promise}				- Resolves with parsed playlist as JSON or rejects with error
  */
-async function parsePlaylist(playlistId) {
+async function parsePlaylist(playlistId)
+{
 	return new Promise((resolve, reject) => {
 		exec(`${Config.YOUTUBE_DL_PATH} --dump-single-json --flat-playlist ${playlistId}`, (error, stdout, stderr) => {
 

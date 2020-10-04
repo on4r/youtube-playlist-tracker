@@ -6,17 +6,20 @@ const dailyUpdateJob = new CronJob("0 0 0 */1 * *", updateHandler, null)
 const hourlyUpdateJob = new CronJob("0 0 */1 * * *", updateHandler, null)
 const minutelyUpdateJob = new CronJob("0 */1 * * * *", updateHandler, null)
 
-function initDailyUpdate() {
+function initDailyUpdate()
+{
 	dailyUpdateJob.start()
 	console.log("CRON: initialized [dailyUpdateJob]")
 }
 
-function initHourlyUpdate() {
+function initHourlyUpdate()
+{
 	hourlyUpdateJob.start()
 	console.log("CRON: initialized [hourlyUpdateJob]")
 }
 
-async function updateHandler() {
+async function updateHandler()
+{
 	console.log("CRON: getting to work", new Date())
 	try {
 		let response = await YoutubeDl.updateBinary()

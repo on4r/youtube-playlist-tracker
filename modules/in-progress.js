@@ -4,19 +4,23 @@
 
 const PLAYLISTS = []
 
-function any() {
+function any()
+{
 	return PLAYLISTS.length ? true : false
 }
 
-function playlist(id) {
+function playlist(id)
+{
 	return PLAYLISTS.includes(id)
 }
 
-function addPlaylist(id) {
+function addPlaylist(id)
+{
 	return PLAYLISTS.push(id)
 }
 
-function removePlaylist(id) {
+function removePlaylist(id)
+{
 	if ( !this.playlist(id) )
 		return
 	let i = PLAYLISTS.indexOf(id)

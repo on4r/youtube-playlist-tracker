@@ -8,7 +8,8 @@ const Parser = require("./parser")
  *
  * @return {Promise}
  */
-async function updateAllPlaylists() {
+async function updateAllPlaylists()
+{
 	return new Promise(async (resolve, reject) => {
 
 		try {
@@ -43,7 +44,8 @@ async function updateAllPlaylists() {
  * @param	{String}	[playlist.uploader_id]
  * @return	{Promise}
  */
-async function parsePlaylistAndUpdateTables(playlist) {
+async function parsePlaylistAndUpdateTables(playlist)
+{
 
 	try {
 
@@ -73,7 +75,8 @@ async function parsePlaylistAndUpdateTables(playlist) {
  * @param	{Object}	parsedPlaylist - The parsed playlists from youtube-dl
  * @return	{Promise}
  */
-async function updatePlaylist(playlist, parsedPlaylist) {
+async function updatePlaylist(playlist, parsedPlaylist)
+{
 
 	let values = {}
 
@@ -94,7 +97,8 @@ async function updatePlaylist(playlist, parsedPlaylist) {
 * @param	{Array}	parsedVideos
 * @return	{Promise}
 */
-async function createOrUpdateVideos(parsedVideos) {
+async function createOrUpdateVideos(parsedVideos)
+{
 
 	let videos = await Database.getVideosByUrls( parsedVideos.map(v => v.url) )
 	let videosToCreate = []
@@ -132,7 +136,8 @@ async function createOrUpdateVideos(parsedVideos) {
  * @param	{String}	title
  * @return	{Boolean}
  */
-function isDeleted(title) {
+function isDeleted(title)
+{
 
 	return (title === "[Deleted video]") ? true : false
 
@@ -145,7 +150,8 @@ function isDeleted(title) {
 * @param	{Array}		parsedVideos
 * @return	{Promise}
 */
-async function createOrDeleteJointRelations(playlistId, parsedVideos) {
+async function createOrDeleteJointRelations(playlistId, parsedVideos)
+{
 
 	let newVideoUrls = []
 	let removedVideoUrls = []

@@ -1,17 +1,14 @@
 const { exec } = require("child_process")
 const Config = require("../config")
 
-async function updateBinary() {
+async function updateBinary()
+{
 	return new Promise((resolve, reject) => {
 		exec(`${Config.APP_ROOT}/update-youtube-dl`, (error, stdout, stderr) => {
-
-			if (error && stderr) {
+			if (error && stderr)
 				reject(stderr)
-				return
-			}
-
-			resolve(stdout)
-
+			else
+				resolve(stdout)
 		})
 	})
 }
