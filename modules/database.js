@@ -305,7 +305,7 @@ function deleteJointRelationsOfPlaylistByVideoIds(playlistId, videoIds)
 				if (this.changes <= 5) {
 					oldVideoIds = videoIds
 				}
-				console.log(`Deleted ${this.changes} Joint-Relations of playlist ${playlistId}: ${oldVideoIds}`)
+				console.log(`Deleted ${this.changes} Joint-Relations of playlist ${playlistId}: [${oldVideoIds}]`)
 			}
 		})
 	})
