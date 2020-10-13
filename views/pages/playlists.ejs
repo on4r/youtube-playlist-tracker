@@ -1,0 +1,24 @@
+<%- include("../partials/header") %>
+
+<%- include("../partials/navigation") %>
+
+<% if (locals.error) { %>
+
+	<p class="<%= errorType %>"><%- error %></p>
+
+<% } else { %>
+
+	<h1>Tracked Playlists</h1>
+
+	<ul>
+	<% playlists.forEach(function(playlist) { %>
+		<% if (playlist.title && playlist.uploader_id) { %>
+		<li><a href="<%= playlist.url %>"><%= playlist.title %> by <%= playlist.uploader_id %></a></li>
+		<% } %>
+	<% }) %>
+	</ul>
+
+<% } %>
+
+<%- include ("../partials/footer") %>
+

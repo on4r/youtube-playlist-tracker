@@ -27,7 +27,7 @@ Setup database
     cp empty.sqlite <my-db-name>
 
 Run the `update-youtube-dl` script
-> Only once after as part of the setup
+> Only once as part of the setup
 
     ./update-youtube-dl
 

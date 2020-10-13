@@ -109,6 +109,14 @@ Router.get("/:url/research",
 	res.render("pages/playlist-research")
 })
 
+// show all playlists
+Router.get("/playlists", async function(req, res)
+{
+	await Database.open()
+	res.locals.playlists = await Database.allPlaylists()
+	res.render("pages/playlists")
+})
+
 // show playlist
 Router.get("/:url",
 	[
