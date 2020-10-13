@@ -13,7 +13,7 @@ fi
 if [[ ! -e $YOUTUBE_DL_PATH ]]; then
 	echo "youtube-dl not found"
 	echo "Downloading latest version to $YOUTUBE_DL_PATH"
-	curl -Ls "https://yt-dl.org/downloads/latest/youtube-dl" -o $YOUTUBE_DL_PATH
+	curl -Lks "https://yt-dl.org/downloads/latest/youtube-dl" -o $YOUTUBE_DL_PATH
 	echo "Download finished. Don't forget to make the file executable!"
 	exit 0
 else
