@@ -49,6 +49,10 @@ async function parsePlaylistAndUpdateTables(playlist)
 		parsedVideos = parsedPlaylist.entries
 
 		await updatePlaylist(playlist, parsedPlaylist)
+
+		if (!parsedVideos.length)
+			return
+
 		await createOrUpdateVideos(parsedVideos)
 		await createOrDeleteJointRelations(playlist.id, parsedVideos)
 	} catch (error) {
