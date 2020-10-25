@@ -23,11 +23,11 @@ async function updateHandler()
 	console.log("CRON: getting to work", new Date())
 
 	try {
-		let response = await YoutubeDl.updateBinary()
-		response = response.trimEnd().replace(/^/gm, "> ")
+//		let response = await YoutubeDl.updateBinary()
+//		response = response.trimEnd().replace(/^/gm, "> ")
 
-		console.log("CRON: update-youtube-dl says:")
-		console.log(response)
+//		console.log("CRON: update-youtube-dl says:")
+//		console.log(response)
 		console.log("CRON: starting to update playlists")
 
 		let startTime = new Date()
