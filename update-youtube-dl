@@ -17,29 +17,17 @@ if [[ ! -e $YOUTUBE_DL_PATH ]]; then
 	echo "Download finished. Don't forget to make the file executable!"
 	exit 0
 else
-	echo "Checking for latest version..."
+	echo "Searching for updates..."
 fi
 
-# first we get the latest release tag
-LATEST_RELEASE_TAG=$(curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/youtube-dl/releases/latest/ | cut -d/ -f8)
-# then we create the downloads url with this tag
-LATEST_RELEASE_DOWNLOADS_URL="https://github.com/ytdl-org/youtube-dl/releases/download/$LATEST_RELEASE_TAG"
-# now we pull the latest checksums
-LATEST_CHECKSUM=$(curl -Ls "$LATEST_RELEASE_DOWNLOADS_URL/MD5SUMS" | head -1 | cut -d ' ' -f1)
-# calculate the old one
-CURRENT_CHECKSUM=$(md5sum $YOUTUBE_DL_PATH | cut -d ' ' -f1)
+LATEST=$(curl -ks https://yt-dl.org/update/LATEST_VERSION)
+CURRENT=$($YOUTUBE_DL_PATH --version)
 
-echo "Checksums"
-echo "Local: $CURRENT_CHECKSUM"
-echo "Latest: $LATEST_CHECKSUM"
+echo "Latest: $LATEST"
+echo "Current: $CURRENT"
 
-# and compare them
-diff <(echo $CURRENT_CHECKSUM) <(echo $LATEST_CHECKSUM)
-
-if [[ $? -eq 1 ]]; then
-	echo "Checksum changed. Downloading latest version to $YOUTUBE_DL_PATH"
-	curl -Ls "$LATEST_RELEASE_DOWNLOADS_URL/youtube-dl" -o $YOUTUBE_DL_PATH
+if [[ $LATEST != $CURRENT ]]; then
+	echo "Update available. Downloading latest version to $YOUTUBE_DL_PATH"
+	curl -Lks "https://yt-dl.org/downloads/latest/youtube-dl" -o $YOUTUBE_DL_PATH
 	echo "Download finished."
-else
-	echo "Nothing changed."
 fi
