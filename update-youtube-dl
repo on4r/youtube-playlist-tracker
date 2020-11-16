@@ -20,7 +20,7 @@ else
 	echo "Searching for updates..."
 fi
 
-LATEST=$(curl -ks https://yt-dl.org/update/LATEST_VERSION)
+LATEST=$(curl -Lks https://yt-dl.org/update/LATEST_VERSION)
 CURRENT=$($YOUTUBE_DL_PATH --version)
 
 echo "Latest: $LATEST"
