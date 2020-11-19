@@ -15,8 +15,8 @@ Add environment variables
     YPT_APP_TITLE="YouTube Playlist Tracker"
     YPT_APP_PORT=8080
     YPT_APP_BASE_URL=/some/url/path/ # <- add trailing slash (default: /)
-    YPT_YOUTUBE_DL_PATH=/path/to/youtube-dl (default: __dirname)
-    YPT_DATABASE_PATH=/path/to/db.sqlite (default: dev.sqlite)
+    YPT_YOUTUBE_DL_PATH=/path/to/youtube-dl (default: __dirname/youtube-dl)
+    YPT_DATABASE_PATH=/path/to/db.sqlite (default: __dirname/dev.sqlite)
 
 Install packages 
 
@@ -26,10 +26,10 @@ Setup database
 
     cp empty.sqlite <my-db-name>
 
-Run the `update-youtube-dl` script
-> Only once as part of the setup
+Download `youtube-dl` and make it executable
 
     ./update-youtube-dl
+    chmod +x youtube-dl
 
 Start server 
 
@@ -38,7 +38,8 @@ Start server
 *(Optional)* Run scripts
 
     npm run updateAllPlaylists
-    npm run updatePlaylist
+    npm run updatePlaylist <id>
+    npm run addPlaylist <id>
 
 ## Lessons learned
 
@@ -54,7 +55,7 @@ Start server
   And `*` jumps to the next occurrence of whatever word is below the cursor. 
   To manipulate folds use `zO`,`zC`,`zA`,`zR`,`zM` (the last two manipulate all folds in the file)
 9. *express*: always `return` after `res.send`, `res.render`, etc. whatever... save yourself some nerves :D
-10. always make sure to call *views*, *scripts*, etc. with the **absolute** path on the system using `__dirname`.
+10. Always make sure to call *views*, *scripts*, etc. with the **absolute** path on the system using `__dirname`.
   Because your node app will be called from a supervisor process from a different directory. so check your *paths*.
 11. **ALWAYS** use opening and closing brackets when writing `if..else`. You **will** add some lines later on and then you have to add them anyways.
 12. There exists something called `N-API` which serves as an interface for low level programms written in `C/C++`. [Read more](https://medium.com/jspoint/a-simple-guide-to-load-c-c-code-into-node-js-javascript-applications-3fcccf54fd32)
