@@ -3,6 +3,23 @@
 <%- include("../partials/navigation") %>
 <%- include("../partials/playlist-info") %>
 
+<h2>total tracked videos: <%= videos.length %></h2>
+
+<ul>
+<% videos.reverse().forEach(function(video) { %>
+	<li>
+		<% if (video.deleted == 1) { %>
+			<span class="error"><%= video.title %><span>
+		<% } else { %>
+			<a href="https://www.youtube.com/watch?v=<%= video.url %>" target="_blank">
+				<%= video.title %>
+			</a>
+		<% } %>
+	</li>
+<% }) %>
+</ul>
+
+<!--
 <% if (locals.error) { %>
 
 	<p class="<%= errorType %>"><%- error %></p>
@@ -25,6 +42,7 @@
 	</ul>
 
 <% } %>
+-->
 
 <%- include ("../partials/footer") %>
 

@@ -41,7 +41,7 @@ async function parsePlaylist(playlistId)
 
 			try {
 				let parsedPlaylist = JSON.parse(stdout)
-				console.log(`Playlist "${parsedPlaylist.title}" by "${parsedPlaylist.uploader_id}" parsed.`)
+				console.log(`Playlist "${parsedPlaylist.title}" by "${parsedPlaylist.uploader}" parsed.`)
 				resolve(parsedPlaylist)
 			} catch (parseError) {
 				reject(parseError)

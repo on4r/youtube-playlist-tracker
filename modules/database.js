@@ -185,7 +185,7 @@ function addVideos(data)
 
 		// data: [{url, title, deleted}, {url, title, deleted}]
 		// escape double quotes in video title
-		let values = data.map(v => `("${v.url}", "${v.title.replace(/"/g,'""')}", ${v.deleted})`).join(", ")
+		let values = data.map(v => `("${v.url}", "${v.title.replace(/"/g,'""')}", 0)`).join(", ")
 		db.run(`INSERT INTO videos (url, title, deleted) VALUES ${values}`, [], function(error)
 		{
 			if (error) {

@@ -53,8 +53,8 @@ async function parsePlaylistAndUpdateTables(playlist)
 		if (!parsedVideos.length)
 			return
 
-		await createOrUpdateVideos(parsedVideos)
 		await createOrDeleteJointRelations(playlist.id, parsedVideos)
+		await createOrUpdateVideos(parsedVideos, playlist.id)
 	} catch (error) {
 		console.log("There was an error while trying to update the playlist", playlist.id, playlist.url)
 		console.error(error)
@@ -79,8 +79,8 @@ async function updatePlaylist(playlist, parsedPlaylist)
 	if (playlist.title != parsedPlaylist.title)
 		values.title = parsedPlaylist.title
 
-	if (playlist.uploader_id != parsedPlaylist.uploader_id)
-		values.uploader_id = parsedPlaylist.uploader_id
+	if (playlist.uploader_id != parsedPlaylist.uploader)
+		values.uploader_id = parsedPlaylist.uploader
 
 	if (values.title !== undefined || values.uploader_id !== undefined)
 		await Database.updatePlaylist(playlist.id, values)
@@ -92,35 +92,38 @@ async function updatePlaylist(playlist, parsedPlaylist)
 * @param	{Array}	parsedVideos
 * @return	{Promise}
 */
-async function createOrUpdateVideos(parsedVideos)
+async function createOrUpdateVideos(parsedVideos, playlistID)
 {
-	let videos = await Database.getVideosByUrls( parsedVideos.map(v => v.url) )
+
 	let videosToCreate = []
 	let videosToUpdate = []
-	let urls = videos.map(v => v.url)
 
-	parsedVideos.forEach(parsedVideo =>
-	{
-		if (!urls.includes(parsedVideo.url)) {
-			videosToCreate.push({
-				url: parsedVideo.url,
-				title: isDeleted(parsedVideo.title) ? "[Deleted]" : parsedVideo.title,
-				deleted: isDeleted(parsedVideo.title) ? 1 : 0
-			})
+	let videosFromDatabase = await Database.getVideosByPlaylistId(playlistID)
+	let allVideos = [...videosFromDatabase, ...parsedVideos]
+	for (let video of allVideos) {
+		if ( videosFromDatabase.find(v => v.url === video.url) ) {
+			if ( parsedVideos.find(v => v.url === video.url) === undefined ) {
+				// video is in db but not parsed -> mark as deleted
+				console.log("mark this as deleted:", video)
+				videosToUpdate.push(video)
+			}
 		} else {
-			let video = videos.find(v => v.url === parsedVideo.url)
-			if (isDeleted(parsedVideo.title) && video.deleted == 0)
-				videosToUpdate.push(video.id)
+			if ( parsedVideos.find(v => v.url === video.url) ) {
+
+				console.log("create this:", video)
+				// video parsed but not in db -> create new entry
+				videosToCreate.push(video)
+			}
 		}
-	})
+	}
 
 	// add new videos ...
 	await Database.addVideos(videosToCreate)
-
 	// ... and update existing ones
-	for (let id of videosToUpdate) {
-		await Database.updateVideo(id, {deleted: 1})
+	for (let v of videosToUpdate) {
+		await Database.updateVideo(v.id, {deleted: 1})
 	}
+
 }
 
 /**
@@ -144,7 +147,6 @@ function isDeleted(title)
 async function createOrDeleteJointRelations(playlistId, parsedVideos)
 {
 	let newVideoUrls = []
-	let removedVideoUrls = []
 
 	// currentVideoUrls(FromPlaylist)
 	let currentVideoUrls = (await Database.getVideosByPlaylistId(playlistId)).map(v => v.url)
@@ -157,22 +159,11 @@ async function createOrDeleteJointRelations(playlistId, parsedVideos)
 			newVideoUrls.push(url)
 	})
 
-	// check if video got removed from playlist (by user)
-	currentVideoUrls.forEach(url =>
-	{
-		if (!latestVideoUrls.includes(url))
-			removedVideoUrls.push(url)
-	})
-
 	// to create a NEW joint relations,
 	// the new video MUST be inserted into the database before
 	let newVideos = await Database.getVideosByUrls(newVideoUrls)
 	let jointRelationsToCreate = newVideos.map(v => ({ playlist_id: playlistId, video_id: v.id }))
 	await Database.addJointRelations(jointRelationsToCreate)
-
-	// delete removed videos
-	let removedVideoIds = (await Database.getVideosByUrls(removedVideoUrls)).map(v => v.id)
-	await Database.deleteJointRelationsOfPlaylistByVideoIds(playlistId, removedVideoIds)
 }
 
 module.exports = {
