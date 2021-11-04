@@ -12,6 +12,10 @@ h1 {
 	font-family: monospace;
 }
 
+a {
+	color: blue;
+}
+
 a:visited {
 	color: #8f8ffb;
 }
