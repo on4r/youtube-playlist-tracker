@@ -1,5 +1,7 @@
 #!/bin/bash
 
+YTDL_DOWNLOAD_URL="https://github.com/ytdl-org/youtube-dl/releases/latest/download/youtube-dl"
+
 # get full script path so nothing breaks in case we call it from a different place
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -13,14 +15,14 @@ fi
 if [[ ! -e $YOUTUBE_DL_PATH ]]; then
 	echo "youtube-dl not found"
 	echo "Downloading latest version to $YOUTUBE_DL_PATH"
-	curl -Lks "https://yt-dl.org/downloads/latest/youtube-dl" -o $YOUTUBE_DL_PATH
+	curl -Lks $YTDL_DOWNLOAD_URL -o $YOUTUBE_DL_PATH
 	echo "Download finished. Don't forget to make the file executable!"
 	exit 0
 else
 	echo "Searching for updates..."
 fi
 
-LATEST=$(curl -Lks https://yt-dl.org/update/LATEST_VERSION)
+LATEST=$(curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/youtube-dl/releases/latest/ | cut -d/ -f8)
 CURRENT=$($YOUTUBE_DL_PATH --version)
 
 echo "Latest: $LATEST"
@@ -28,6 +30,6 @@ echo "Current: $CURRENT"
 
 if [[ $LATEST != $CURRENT ]]; then
 	echo "Update available. Downloading latest version to $YOUTUBE_DL_PATH"
-	curl -Lks "https://yt-dl.org/downloads/latest/youtube-dl" -o $YOUTUBE_DL_PATH
+	curl -Lks $YTDL_DOWNLOAD_URL -o $YOUTUBE_DL_PATH
 	echo "Download finished."
 fi
