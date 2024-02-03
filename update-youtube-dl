@@ -1,6 +1,6 @@
 #!/bin/bash
 
-YTDL_DOWNLOAD_URL="https://github.com/ytdl-org/youtube-dl/releases/latest/download/youtube-dl"
+YTDL_DOWNLOAD_URL="https://github.com/ytdl-org/ytdl-nightly/releases/latest/download/youtube-dl"
 
 # get full script path so nothing breaks in case we call it from a different place
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -22,7 +22,7 @@ else
 	echo "Searching for updates..."
 fi
 
-LATEST=$(curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/youtube-dl/releases/latest/ | cut -d/ -f8)
+LATEST=$(curl -LIs -o /dev/null -w %{url_effective} https://github.com/ytdl-org/ytdl-nightly/releases/latest/ | cut -d/ -f8)
 CURRENT=$($YOUTUBE_DL_PATH --version)
 
 echo "Latest: $LATEST"
