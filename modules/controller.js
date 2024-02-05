@@ -103,9 +103,11 @@ async function createOrUpdateVideos(parsedVideos, playlistID)
 	for (let video of allVideos) {
 		if ( videosFromDatabase.find(v => v.url === video.url) ) {
 			if ( parsedVideos.find(v => v.url === video.url) === undefined ) {
-				// video is in db but not parsed -> mark as deleted
-				console.log("mark this as deleted:", video)
-				videosToUpdate.push(video)
+				if ( video.deleted !== 1 ) {
+					// video is in db but not parsed -> mark as deleted
+					console.log("mark this as deleted:", video)
+					videosToUpdate.push(video)
+				}
 			}
 		} else {
 			if ( parsedVideos.find(v => v.url === video.url) ) {
