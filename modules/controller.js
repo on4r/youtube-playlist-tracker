@@ -96,7 +96,8 @@ async function createOrUpdateVideos(parsedVideos, playlistID)
 {
 
 	let videosToCreate = []
-	let videosToUpdate = []
+	let videosToMarkAsDeleted = []
+	let videosToMarkAsAvailable = []
 
 	let videosFromDatabase = await Database.getVideosByPlaylistId(playlistID)
 	let allVideos = [...videosFromDatabase, ...parsedVideos]
@@ -106,7 +107,12 @@ async function createOrUpdateVideos(parsedVideos, playlistID)
 				if ( video.deleted !== 1 ) {
 					// video is in db but not parsed -> mark as deleted
 					console.log("mark this as deleted:", video)
-					videosToUpdate.push(video)
+					videosToMarkAsDeleted.push(video)
+				}
+			} else {
+				if ( video.deleted === 1 ) {
+					console.log("video was falsely marked as deleted:", video)
+					videosToMarkAsAvailable.push(video)
 				}
 			}
 		} else {
@@ -119,11 +125,15 @@ async function createOrUpdateVideos(parsedVideos, playlistID)
 		}
 	}
 
-	// add new videos ...
+	// add new videos
 	await Database.addVideos(videosToCreate)
-	// ... and update existing ones
-	for (let v of videosToUpdate) {
+
+	for (let v of videosToMarkAsDeleted) {
 		await Database.updateVideo(v.id, {deleted: 1})
+	}
+
+	for (let v of videosToMarkAsAvailable) {
+		await Database.updateVideo(v.id, {deleted: 0})
 	}
 
 }
